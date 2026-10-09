@@ -6,6 +6,10 @@
 	objectVersion = 110;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		8935E3E03078A3D5008BA6D1 /* MnemisCore in Frameworks */ = {isa = PBXBuildFile; productRef = 8935E3E23078A3D5008BA6D1 /* MnemisCore */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		8935E3C03078A3D5008BA6D1 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -51,6 +55,7 @@
 		8935E3AD3078A3D3008BA6D1 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
+				8935E3E03078A3D5008BA6D1 /* MnemisCore in Frameworks */,
 			);
 		};
 		8935E3BC3078A3D5008BA6D1 /* Frameworks */ = {
@@ -103,6 +108,9 @@
 				8935E3B23078A3D3008BA6D1 /* Mnemis */,
 			);
 			name = Mnemis;
+			packageProductDependencies = (
+				8935E3E23078A3D5008BA6D1 /* MnemisCore */,
+			);
 			productName = Mnemis;
 			productReference = 8935E3B03078A3D3008BA6D1 /* Mnemis.app */;
 			productType = "com.apple.product-type.application";
@@ -177,10 +185,14 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				ru,
 				Base,
 			);
 			mainGroup = 8935E3A73078A3D3008BA6D1;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				8935E3E13078A3D5008BA6D1 /* XCLocalSwiftPackageReference "Packages/MnemisCore" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 8935E3B13078A3D3008BA6D1 /* Products */;
 			projectDirPath = "";
@@ -548,6 +560,20 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		8935E3E13078A3D5008BA6D1 /* XCLocalSwiftPackageReference "Packages/MnemisCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/MnemisCore;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		8935E3E23078A3D5008BA6D1 /* MnemisCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = MnemisCore;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 8935E3A83078A3D3008BA6D1 /* Project object */;
 	validationLevel = 1;
