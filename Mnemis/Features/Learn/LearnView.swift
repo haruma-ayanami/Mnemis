@@ -1,51 +1,100 @@
 import SwiftUI
-import SwiftData
-import MnemisCore
 
-/// Учебная сессия: повторения и новые слова одной очередью (ABOUT.md, раздел 29).
-/// Порядок очереди задаёт `LearnQueue` из MnemisCore.
+/// Экран обучения (ABOUT.md, раздел 29): карточка, ответ с оценкой, итоги или «всё сделано».
 struct LearnView: View {
-    @Environment(\.modelContext) private var context
-    @AppStorage(SettingsKey.dailyNewWordLimit) private var dailyNewLimit = 5
-    @Query private var words: [Word]
-    @Query private var progress: [LearningProgress]
-    @State private var errorMessage: String?
+    @State private var viewModel: LearnViewModel
+    private let container: AppContainer
 
-    private var queue: [Word] {
-        LearnQueue.make(words: words, progress: progress, dailyNewLimit: dailyNewLimit)
+    init(container: AppContainer) {
+        self.container = container
+        _viewModel = State(initialValue: LearnViewModel(container: container))
     }
 
     var body: some View {
-        Group {
-            if let next = queue.first {
-                FlashcardView(word: next) { rating in
-                    rate(rating, for: next)
+        ZStack {
+            AppColor.background.ignoresSafeArea()
+            switch viewModel.state {
+            case .loading:
+                LoadingView()
+            case .failed(let message):
+                ErrorStateView(message: message)
+            case .loaded:
+                if let word = viewModel.current {
+                    FlashcardView(viewModel: viewModel, word: word, onClose: close)
+                        .id(word.id)
+                } else if viewModel.isSessionFinished {
+                    SessionSummaryView(viewModel: viewModel, onDone: close)
+                } else {
+                    LearnEmptyView(viewModel: viewModel)
                 }
-            } else {
-                ContentUnavailableView(
-                    "All caught up",
-                    systemImage: "checkmark.circle",
-                    description: Text("No words are due right now. Come back later.")
-                )
             }
         }
-        .navigationTitle("Learn")
-        .safeAreaInset(edge: .bottom) {
-            if let errorMessage {
-                Text(errorMessage)
-                    .font(.footnote)
-                    .foregroundStyle(.red)
-                    .padding()
-            }
-        }
+        .mnemisTabBarHidden(viewModel.current != nil)
+        .onAppear { viewModel.startIfNeeded() }
     }
 
-    private func rate(_ rating: ReviewRating, for word: Word) {
-        do {
-            try ReviewService(context: context).rate(wordID: word.id, rating: rating)
-            errorMessage = nil
-        } catch {
-            errorMessage = error.localizedDescription
+    private func close() {
+        container.router.selectedTab = .today
+    }
+}
+
+/// «Всё сделано»: время следующего повторения и спокойное сообщение.
+struct LearnEmptyView: View {
+    let viewModel: LearnViewModel
+
+    var body: some View {
+        ZStack {
+            DecorLayer {
+                DotRings().frame(width: 640, height: 640).opacity(0.55)
+            }
+
+            VStack(alignment: .leading, spacing: 0) {
+                Text("Learn")
+                    .font(.mnemisTitle).tracking(-0.8)
+                    .foregroundStyle(AppColor.ink)
+
+                VStack(spacing: 14) {
+                    Text("[ next review ]").bracketLabel(AppColor.accent)
+                    if let next = viewModel.nextReviewDate {
+                        Text(next, format: .dateTime.hour().minute())
+                            .font(.system(size: 76, weight: .medium, design: .monospaced))
+                            .tracking(-3.4)
+                            .foregroundStyle(AppColor.ink)
+                        Text("in \(next, style: .relative) · \(viewModel.dueSoonCount) words")
+                            .font(.system(size: 13, design: .monospaced))
+                            .foregroundStyle(AppColor.smoke)
+                    } else {
+                        Text("—")
+                            .font(.system(size: 76, weight: .medium, design: .monospaced))
+                            .foregroundStyle(AppColor.faint)
+                        Text("nothing scheduled yet")
+                            .font(.system(size: 13, design: .monospaced))
+                            .foregroundStyle(AppColor.smoke)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.top, 110)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("All caught up.")
+                        .font(.system(size: 20, weight: .semibold))
+                    Text("Today's new words are done and nothing is due. Rest helps memory too.")
+                        .font(.system(size: 15))
+                        .foregroundStyle(AppColor.ash)
+                }
+                .foregroundStyle(AppColor.ink)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(22)
+                .glassCard()
+                .padding(.top, 56)
+
+                Button { viewModel.restart() } label: { Text("Learn 3 extra words") }
+                    .buttonStyle(GlassButtonStyle())
+                    .padding(.top, 12)
+                Spacer()
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 8)
         }
     }
 }

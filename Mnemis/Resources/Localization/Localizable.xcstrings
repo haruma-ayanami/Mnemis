@@ -1,0 +1,656 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "" : {
+
+    },
+    "—" : {
+
+    },
+    "· %lld cards" : {
+
+    },
+    "· every dot is a word you will keep ·" : {
+
+    },
+    "[ a memory system ]" : {
+
+    },
+    "[ activity · 12 weeks ]" : {
+
+    },
+    "[ daily pace ]" : {
+
+    },
+    "[ definition ]" : {
+
+    },
+    "[ examples ]" : {
+
+    },
+    "[ ipa ]" : {
+
+    },
+    "[ meaning ]" : {
+
+    },
+    "[ new word ]" : {
+
+    },
+    "[ next review ]" : {
+
+    },
+    "[ note ]" : {
+
+    },
+    "[ notifications ]" : {
+
+    },
+    "[ review ]" : {
+
+    },
+    "[ session complete ]" : {
+
+    },
+    "[ translation · optional ]" : {
+
+    },
+    "[ translation ]" : {
+
+    },
+    "[ vocabulary ]" : {
+
+    },
+    "[ word · english ]" : {
+
+    },
+    "[ word of the day ]" : {
+
+    },
+    "[ your level ]" : {
+
+    },
+    "‖" : {
+
+    },
+    "/ˈsɛrənˌdɪpɪti/" : {
+
+    },
+    "%@ / %@ · %lld new · %lld reviews" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ / %2$@ · %3$lld new · %4$lld reviews"
+          }
+        }
+      }
+    },
+    "%@ in your vocabulary" : {
+
+    },
+    "%lld" : {
+
+    },
+    "%lld days" : {
+
+    },
+    "%lld days done" : {
+
+    },
+    "%lld good, %lld easy, %lld hard, %lld again" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld good, %2$lld easy, %3$lld hard, %4$lld again"
+          }
+        }
+      }
+    },
+    "%lld words, done." : {
+
+    },
+    "%lld%%" : {
+
+    },
+    "→" : {
+
+    },
+    "≈ %lld min a day" : {
+
+    },
+    "── how well did you remember? ──" : {
+
+    },
+    "──── · ────" : {
+
+    },
+    "┌" : {
+
+    },
+    "┌─────────┐\n│  · · ·  │\n└─────────┘" : {
+
+    },
+    "┐" : {
+
+    },
+    "└" : {
+
+    },
+    "┘" : {
+
+    },
+    "▸" : {
+
+    },
+    "○" : {
+
+    },
+    "●" : {
+
+    },
+    "✓" : {
+
+    },
+    "22:00 – 08:00" : {
+
+    },
+    "A few minutes now keeps them fresh." : {
+
+    },
+    "A few new words a day. Mnemis decides what to review and when." : {
+
+    },
+    "a new word to guess" : {
+
+    },
+    "Abstract topics, nuance" : {
+
+    },
+    "Academic and test vocabulary" : {
+
+    },
+    "accuracy" : {
+
+    },
+    "Add" : {
+
+    },
+    "Add “%@”" : {
+
+    },
+    "Add a word in Words, or there are no unlearned words left for your level." : {
+
+    },
+    "Add to my words" : {
+
+    },
+    "Add word" : {
+
+    },
+    "Add Word" : {
+
+    },
+    "Add your example" : {
+
+    },
+    "Add your first word. It works offline." : {
+
+    },
+    "after MVP" : {
+
+    },
+    "Again" : {
+
+    },
+    "All" : {
+
+    },
+    "All caught up." : {
+
+    },
+    "all notifications are off" : {
+
+    },
+    "all time" : {
+
+    },
+    "Allow notifications" : {
+
+    },
+    "Appearance" : {
+
+    },
+    "At most per day" : {
+
+    },
+    "Back" : {
+
+    },
+    "Back to learning" : {
+
+    },
+    "Back to Settings" : {
+
+    },
+    "Back to Words" : {
+
+    },
+    "Cancel" : {
+
+    },
+    "Card %lld of %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Card %1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "change any time in Settings → Notifications" : {
+
+    },
+    "Clear search" : {
+
+    },
+    "Continue" : {
+
+    },
+    "Daily activity over the last 12 weeks" : {
+
+    },
+    "Daily reminder" : {
+
+    },
+    "Dark" : {
+
+    },
+    "Data" : {
+
+    },
+    "definition" : {
+
+    },
+    "Done" : {
+
+    },
+    "Easy" : {
+
+    },
+    "Edit" : {
+
+    },
+    "Elementary" : {
+
+    },
+    "EN" : {
+
+    },
+    "End session" : {
+
+    },
+    "every day · 09:00" : {
+
+    },
+    "Everyday words and phrases" : {
+
+    },
+    "ex." : {
+
+    },
+    "Exam prep" : {
+
+    },
+    "Fetch details from sources" : {
+
+    },
+    "Fewer words" : {
+
+    },
+    "Gentle reminders, only when they help." : {
+
+    },
+    "Get started" : {
+
+    },
+    "Good" : {
+
+    },
+    "Guess the meaning, then check it." : {
+
+    },
+    "Hard" : {
+
+    },
+    "i" : {
+
+    },
+    "I already know this word" : {
+
+    },
+    "I know this" : {
+
+    },
+    "iCloud sync" : {
+
+    },
+    "in %@ · %lld words" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "in %1$@ · %2$lld words"
+          }
+        }
+      }
+    },
+    "Intermediate" : {
+
+    },
+    "interval" : {
+
+    },
+    "Keep your streak" : {
+
+    },
+    "Known" : {
+
+    },
+    "Language" : {
+
+    },
+    "last 7 days" : {
+
+    },
+    "last 30 days" : {
+
+    },
+    "Learn" : {
+
+    },
+    "Learn 3 extra words" : {
+
+    },
+    "Learn 3 more new words" : {
+
+    },
+    "Learn now" : {
+
+    },
+    "Learning" : {
+
+    },
+    "less" : {
+
+    },
+    "Level" : {
+
+    },
+    "Light" : {
+
+    },
+    "local only · no account needed" : {
+
+    },
+    "Memory strength %lld of %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Memory strength %1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "minutes" : {
+
+    },
+    "mnemis" : {
+
+    },
+    "mnemis 0.2 · local-first · no account" : {
+
+    },
+    "more" : {
+
+    },
+    "More words" : {
+
+    },
+    "new today" : {
+
+    },
+    "New word" : {
+
+    },
+    "new words" : {
+
+    },
+    "New words per day" : {
+
+    },
+    "next review" : {
+
+    },
+    "no account · works offline" : {
+
+    },
+    "No internet? The word is saved anyway. Details can be added later." : {
+
+    },
+    "No word for today" : {
+
+    },
+    "No words yet" : {
+
+    },
+    "Not now" : {
+
+    },
+    "Nothing found" : {
+
+    },
+    "nothing is sent at night" : {
+
+    },
+    "nothing scheduled yet" : {
+
+    },
+    "Notifications" : {
+
+    },
+    "Notifications & sound" : {
+
+    },
+    "Notifications are blocked in system settings. Allow them there to receive reminders." : {
+
+    },
+    "off" : {
+
+    },
+    "Off" : {
+
+    },
+    "On" : {
+
+    },
+    "One short session before midnight is enough." : {
+
+    },
+    "only if you skipped today" : {
+
+    },
+    "Play pronunciation" : {
+
+    },
+    "Preview" : {
+
+    },
+    "Pronunciation sound" : {
+
+    },
+    "Quiet hours" : {
+
+    },
+    "recall the meaning · tap to reveal" : {
+
+    },
+    "Remember every word you learn." : {
+
+    },
+    "Remembered" : {
+
+    },
+    "Remind me in 1 hour" : {
+
+    },
+    "Results" : {
+
+    },
+    "Resume" : {
+
+    },
+    "Reviewing" : {
+
+    },
+    "reviews" : {
+
+    },
+    "Reviews come on top and never count against this limit." : {
+
+    },
+    "Reviews ready" : {
+
+    },
+    "right / wrong" : {
+
+    },
+    "RU" : {
+
+    },
+    "Save" : {
+
+    },
+    "Save note" : {
+
+    },
+    "Schedule" : {
+
+    },
+    "Search word, translation, note" : {
+
+    },
+    "serendipity" : {
+
+    },
+    "session" : {
+
+    },
+    "Settings" : {
+
+    },
+    "Show answer" : {
+
+    },
+    "Show answer for %@" : {
+
+    },
+    "Something went wrong" : {
+
+    },
+    "src" : {
+
+    },
+    "Start learning" : {
+
+    },
+    "Start session" : {
+
+    },
+    "Statistics" : {
+
+    },
+    "Step %lld of 3" : {
+
+    },
+    "streak · longest" : {
+
+    },
+    "streak is safe for today" : {
+
+    },
+    "Streak reminder" : {
+
+    },
+    "Suspend" : {
+
+    },
+    "System" : {
+
+    },
+    "This week" : {
+
+    },
+    "Time" : {
+
+    },
+    "to review" : {
+
+    },
+    "Today" : {
+
+    },
+    "Today's new words are done and nothing is due. Rest helps memory too." : {
+
+    },
+    "translation" : {
+
+    },
+    "Types" : {
+
+    },
+    "Upper-intermediate" : {
+
+    },
+    "We pick daily words for this level. You can change it later." : {
+
+    },
+    "when words are due" : {
+
+    },
+    "Where do you start?" : {
+
+    },
+    "Word of the day" : {
+
+    },
+    "Words" : {
+
+    },
+    "Words are ready to review" : {
+
+    },
+    "words learned · %@" : {
+
+    },
+    "Work, travel, opinions" : {
+
+    },
+    "you" : {
+
+    },
+    "Your note" : {
+
+    },
+    "Your word of the day" : {
+
+    },
+    "счастливая случайность" : {
+
+    }
+  },
+  "version" : "1.0"
+}

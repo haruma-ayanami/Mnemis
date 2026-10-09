@@ -1,22 +1,23 @@
 import SwiftUI
-import SwiftData
 
 @main
 struct MnemisApp: App {
-    @AppStorage(SettingsKey.hasOnboarded) private var hasOnboarded = false
-    private let container = AppEnvironment.makeContainer()
+    @State private var container: AppContainer
+
+    init() {
+        do {
+            let container = try AppContainer.live()
+            container.bootstrap()
+            _container = State(initialValue: container)
+        } catch {
+            fatalError("Could not start Mnemis: \(error)")
+        }
+    }
 
     var body: some Scene {
         WindowGroup {
-            Group {
-                if hasOnboarded {
-                    RootView()
-                } else {
-                    OnboardingView()
-                }
-            }
-            .task { AppEnvironment.bootstrap(in: container.mainContext) }
+            RootView(container: container)
+                .task { await container.refreshNotifications() }
         }
-        .modelContainer(container)
     }
 }

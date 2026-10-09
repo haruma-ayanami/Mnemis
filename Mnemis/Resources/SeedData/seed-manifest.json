@@ -1,0 +1,28 @@
+{
+  "sources": [
+    {
+      "id": "ngsl-wiktionary",
+      "name": "NGSL-GR word list + Wiktionary (via kaikki.org)",
+      "url": "https://kaikki.org",
+      "licenseID": "cc-by-sa"
+    },
+    {
+      "id": "dictionaryapi.dev",
+      "name": "Free Dictionary API (dictionaryapi.dev)",
+      "url": "https://dictionaryapi.dev",
+      "licenseID": "dictionaryapi-dev"
+    }
+  ],
+  "licenses": [
+    {
+      "id": "cc-by-sa",
+      "name": "CC BY-SA 4.0 / CC BY-SA 3.0",
+      "text": "Word list: NGSL-GR 1.0 by Browne, Culligan et al. (newgeneralservicelist.com), CC BY-SA 4.0. Definitions, pronunciations, examples and translations come from Wiktionary (CC BY-SA), extracted by wiktextract: Tatu Ylonen, Wiktextract: Wiktionary as Machine-Readable Structured Data, LREC 2022, via kaikki.org. Derived data is shared under the same license."
+    },
+    {
+      "id": "dictionaryapi-dev",
+      "name": "dictionaryapi.dev",
+      "text": "Responses of Free Dictionary API are only used to fill empty fields of your words. Terms of the data were not published; verify before release."
+    }
+  ]
+}

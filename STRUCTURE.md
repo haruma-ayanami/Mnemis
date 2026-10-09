@@ -1,77 +1,108 @@
 # Mnemis — структура проекта
 
-Проект разделён на две части:
+Фактическое устройство кода. Архитектурные решения и правила зависимостей описаны в [ARCHITECTURE.md](ARCHITECTURE.md), продуктовые требования — в [ABOUT.md](ABOUT.md).
 
-- **Mnemis** (Xcode-таргет) — всё, что видит пользователь: экраны, дизайн, ресурсы.
-- **MnemisCore** (локальный Swift-пакет) — данные и логика без UI: модели, алгоритм повторений, словарь, поиск.
-
-Приложение зависит от ядра, ядро ничего не знает о приложении. Поэтому логику можно тестировать через `swift test` за доли секунды, без симулятора.
+Один multiplatform-проект (iPhone, iPad, Mac), без локальных Swift-пакетов.
 
 ```text
 Mnemis/
-├── ABOUT.md                      продуктовая спецификация
-├── STRUCTURE.md                  этот файл
+├── ABOUT.md, ARCHITECTURE.md, STRUCTURE.md
 ├── Mnemis.xcodeproj
+├── Tools/build_seed.py              сборка words-en-ru.json из NGSL-GR и Wiktionary (kaikki.org)
 │
-├── Mnemis/                       приложение (SwiftUI)
-│   ├── App/
-│   │   ├── MnemisApp.swift       точка входа: онбординг или RootView
-│   │   ├── AppEnvironment.swift  контейнер SwiftData, импорт встроенного словаря
-│   │   └── RootView.swift        TabView: Today, Learn, Words, Statistics, Settings
-│   ├── Features/                 одна папка — один раздел приложения
-│   │   ├── Today/                TodayView: слово дня, Due, Streak
-│   │   ├── Learn/                LearnView (сессия), FlashcardView (карточка)
-│   │   ├── Words/                WordsView: личный словарь, поиск, добавление
-│   │   ├── Statistics/           StatisticsView
-│   │   ├── Settings/             SettingsView, LearningSettings (ключи и уровни)
-│   │   └── Onboarding/           OnboardingView: первый запуск
-│   ├── DesignSystem/             общие визуальные элементы
-│   │   ├── Typography.swift      роли шрифтов (SF Pro / SF Mono)
-│   │   ├── WordCard.swift        карточка слова
-│   │   └── StatTile.swift        плитка «число + подпись»
-│   ├── Resources/
-│   │   ├── words.json            встроенный словарь (сейчас образец)
-│   │   └── Localizable.xcstrings строки EN/RU
-│   └── Assets.xcassets
+├── Mnemis/
+│   ├── App/                         сборка и запуск
+│   │   ├── MnemisApp.swift          точка входа
+│   │   ├── AppContainer.swift       зависимости, use case'ы, bootstrap
+│   │   ├── AppRouter.swift          вкладки и онбординг
+│   │   └── RootView.swift           онбординг или TabView
+│   │
+│   ├── Core/                        логика без UI
+│   │   ├── Domain/                  чистые структуры и правила, без SwiftData
+│   │   │   ├── Models/              Word, WordProgress, ReviewRecord, ExampleSentence,
+│   │   │   │                        DailyWordAssignment, UserSettings
+│   │   │   ├── Enums/               LearningStatus, ReviewRating, LanguageCode, WordOrigin
+│   │   │   └── Rules/LearningRules  переходы статусов: known, suspend, resume, restore
+│   │   ├── Learning/                алгоритм и use case'ы обучения
+│   │   │   ├── SpacedRepetitionEngine (протокол), SM2SpacedRepetitionEngine
+│   │   │   ├── ReviewScheduler      due-слова и ближайшее повторение
+│   │   │   ├── DailyWordSelector    выбор слова дня (чистая функция)
+│   │   │   ├── DailyWordUseCase     слово дня на локальный день, сохраняется
+│   │   │   ├── LearningSession      состав сессии: повторения + новые слова
+│   │   │   ├── SubmitReviewUseCase  оценка: прогресс и история в одной транзакции
+│   │   │   ├── WordStatusUseCase    known / suspend / resume
+│   │   │   ├── WordEditor           добавление и правка слов и примеров
+│   │   │   ├── SettingsUseCase      настройки профиля
+│   │   │   └── StreakCalculator     серия по календарным дням
+│   │   ├── Persistence/
+│   │   │   ├── PersistenceController  ModelContainer, save()
+│   │   │   ├── Schema/              SwiftData-классы (*Entity) и маппинг в домен
+│   │   │   ├── Repositories/        Word, Progress, Review, DailyWord, Settings
+│   │   │   └── Seed/                SeedData: импорт встроенного словаря
+│   │   ├── Services/
+│   │   │   ├── Dictionary/          DictionaryService (приоритеты), провайдеры,
+│   │   │   │                        WordEnrichment (дополнение без перезаписи)
+│   │   │   ├── Networking/          APIClient, APIError (таймаут, статусы)
+│   │   │   ├── Notifications/       NotificationPlanner (чистое расписание), NotificationService
+│   │   │   └── Pronunciation/       SpeechPlayer (системный синтезатор речи, офлайн)
+│   │   ├── Search/                  SearchService, TextNormalizer
+│   │   ├── DesignSystem/            Typography, Spacing, WordCard, StatTile
+│   │   └── Support/                 Clock, LocalDay, Logger
+│   │
+│   ├── Features/                    экраны: View + ViewModel
+│   │   ├── Onboarding/              OnboardingView, OnboardingViewModel
+│   │   ├── Today/                   TodayView, TodayViewModel
+│   │   ├── Learn/                   LearnView, LearnViewModel, FlashcardView, SessionSummaryView
+│   │   ├── Words/                   WordsView, WordsViewModel, WordDetailsView,
+│   │   │                            WordDetailsViewModel, AddWordView, EditWordView
+│   │   ├── Statistics/              StatisticsView, StatisticsViewModel
+│   │   ├── Settings/                SettingsView, SettingsViewModel
+│   │   └── Shared/                  EmptyStateView, ErrorStateView, LoadingView, ScreenState
+│   │
+│   ├── Platform/Shared/             платформенные отличия (например, автозаглавные буквы)
+│   │
+│   └── Resources/
+│       ├── SeedData/                words-en-ru.json, seed-manifest.json (источники и лицензии)
+│       ├── Localization/            Localizable.xcstrings
+│       ├── Licenses/                THIRD_PARTY_NOTICES.md
+│       └── Assets.xcassets
 │
-├── Packages/MnemisCore/          ядро (Swift Package)
-│   ├── Package.swift
-│   ├── Sources/MnemisCore/
-│   │   ├── Models/               SwiftData: Word, LearningProgress, Review,
-│   │   │                         DailyWord, UserExample, UserNote, перечисления
-│   │   ├── Persistence/          MnemisStore: схема и создание контейнера
-│   │   ├── SpacedRepetition/     SpacedRepetitionEngine (протокол),
-│   │   │                         SM2SpacedRepetitionEngine, SchedulingState,
-│   │   │                         ReviewService (оценка → прогресс + история)
-│   │   ├── Vocabulary/           DailyWordSelector/Service, LearnQueue,
-│   │   │                         SearchService, WordImporter, StreakCalculator, DayKey
-│   │   └── Dictionary/           протоколы внешних источников, FreeDictionaryAPIService
-│   └── Tests/MnemisCoreTests/    тесты ядра (Swift Testing)
+├── MnemisTests/
+│   ├── UnitTests/                   движок, правила, выбор слова дня, сессия, поиск,
+│   │                                серии, словари (с MockURLProtocol)
+│   ├── IntegrationTests/            хранение, сценарии пользователя, встроенный словарь
+│   └── TestSupport/                 TestClock, MockURLProtocol, Mocks и Fixtures
 │
-├── MnemisTests/                  тесты уровня приложения (ресурсы, интеграция)
-└── MnemisUITests/                UI-тесты
+└── MnemisUITests/                   UI-тесты (пока шаблон)
 ```
 
 ## Правила
 
-1. **Куда класть новый код.** Если код работает без SwiftUI — в `MnemisCore`. Если это экран — в `Features/<Раздел>/`. Если элемент нужен нескольким экранам — в `DesignSystem/`.
-2. **View не ходят в сеть.** Внешние API доступны только через протоколы из `MnemisCore/Dictionary` (ABOUT.md, раздел 11).
-3. **Алгоритм повторений заменяемый.** Экраны используют `ReviewService`, движок передаётся через протокол `SpacedRepetitionEngine`.
-4. **Все модели перечислены в одном месте** — `MnemisStore.models`.
-5. **Без `@Attribute(.unique)`**: будущая синхронизация через CloudKit его не поддерживает. Уникальность проверяется в коде.
+1. **Домен не знает про SwiftData и UI.** Доменные структуры — в `Core/Domain`, SwiftData-классы — только в `Core/Persistence/Schema`.
+2. **Время только через `Clock`.** Не вызывать `Date()` напрямую: тесты используют `TestClock`.
+3. **View не ходят в сеть и не содержат правил.** Экран получает ViewModel, ViewModel вызывает use case или репозиторий.
+4. **Прогресс и история пишутся одним `save()`.** Use case'ы, которые меняют несколько сущностей, сохраняют их вместе.
+5. **Пользовательский контент не перезаписывается API.** Примеры пользователя — отдельные записи, поля обогащаются только если пустые.
+6. **Без `@Attribute(.unique)`.** Уникальность проверяется в коде: CloudKit её не поддерживает.
+
+## Что ещё не реализовано
+
+Эти пункты есть в ARCHITECTURE.md, но пока не созданы — чтобы не оставлять пустых заглушек:
+
+- `Core/Services`: файловое аудио из источников, Apple Translation, Tatoeba, импорт/экспорт, синхронизация.
+- `Core/Persistence/Migrations` — появится, когда понадобится первая миграция схемы.
+- `Platform/iOS`, `Platform/macOS` — пока все различия умещаются в `Platform/Shared`.
 
 ## Запуск тестов
 
-Ядро (macOS, без симулятора):
-
-```bash
-cd Packages/MnemisCore && xcrun swift test
-```
-
-Приложение (симулятор):
+Приложение и тесты на симуляторе iOS:
 
 ```bash
 xcodebuild test -project Mnemis.xcodeproj -scheme Mnemis -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -only-testing:MnemisTests
 ```
 
-`xcrun` нужен, чтобы взять Swift из Xcode: другой тулчейн в `PATH` (например, swiftly) может не совпадать с SDK.
+На Mac без симулятора (быстрее):
+
+```bash
+xcodebuild test -project Mnemis.xcodeproj -scheme Mnemis -destination 'platform=macOS' -only-testing:MnemisTests
+```
