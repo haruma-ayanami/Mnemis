@@ -19,7 +19,7 @@ struct WordEditor {
         guard !trimmedLemma.isEmpty else { throw WordEditorError.emptyLemma }
 
         let key = TextNormalizer.normalize(trimmedLemma)
-        if let existing = try words.allWords().first(where: { $0.normalizedLemma == key }) {
+        if let existing = try words.words(normalizedLemma: key).first {
             throw WordEditorError.duplicate(existing.id)
         }
 
@@ -38,6 +38,10 @@ struct WordEditor {
     func update(_ word: Word) throws {
         var updated = word
         updated.updatedAt = clock.now
+        // Правленый перевод — это перевод первой части речи: списки и карточки показывают одно и то же.
+        if !updated.meanings.isEmpty {
+            updated.meanings[0].translation = updated.translation
+        }
         try words.upsert(updated)
         try persistence.save()
     }

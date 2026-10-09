@@ -38,6 +38,7 @@ final class SettingsViewModel {
     func setLevel(_ level: LanguageLevel) { change { $0.proficiencyLevel = level } }
     func setNewWordsPerDay(_ count: Int) { change { $0.newWordsPerDay = count } }
     func setSound(_ on: Bool) { change { $0.soundEnabled = on } }
+    func setPhrasesInToday(_ on: Bool) { change(refresh: false) { $0.phrasesInToday = on } }
 
     func setTheme(_ theme: ThemePreference) {
         change { $0.preferredTheme = theme }
@@ -98,6 +99,11 @@ final class SettingsViewModel {
         return "\(active) on · at most \(settings.maxNotificationsPerDay) a day · quiet at night"
     }
 
+    /// Значение строки «Account»: провайдер входа или «sign in», если аккаунта нет.
+    var accountRowValue: String {
+        container.account.session.map { $0.provider.title.lowercased() } ?? String(localized: "sign in")
+    }
+
     var notificationsRowValue: String {
         guard settings.dailyReminderEnabled else { return String(localized: "off") }
         let active = [settings.notifyWordOfDay, settings.notifyReviews, settings.notifyStreak].filter { $0 }.count
@@ -118,7 +124,7 @@ final class SettingsViewModel {
     }
 
     private func loadSources() throws -> [SourceInfo] {
-        let manifest = try SeedBundle.load().manifest
+        let manifest = try SeedBundle.loadManifest()
         return manifest.sources.map { source in
             let license = manifest.license(id: source.licenseID)
             return SourceInfo(

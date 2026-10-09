@@ -1,14 +1,24 @@
 import SwiftUI
 
-/// Личный словарь: поиск, фильтры по статусам, список, добавление (ABOUT.md, раздел 15).
+/// Личный словарь: вкладки «Words» и «Idioms», поиск, фильтры по статусам, список со свайпами (ABOUT.md, раздел 15).
 struct WordsView: View {
     @State private var viewModel: WordsViewModel
+    @State private var phrases: PhrasesViewModel
+    @State private var section: WordsSection = .words
     @State private var isAdding = false
+    @State private var addKind: EntryKind = .word
+    /// Открытая карточка слова: переход без шеврона, как в дизайне строк.
+    @State private var openedWord: Word?
+    @State private var openedIdiom: Phrase?
+    /// Источник «зума»: карточка слова вырастает из строки, форма добавления — из кнопки «+».
+    @Namespace private var zoom
+    @Namespace private var pill
     private let container: AppContainer
 
     init(container: AppContainer) {
         self.container = container
         _viewModel = State(initialValue: WordsViewModel(container: container))
+        _phrases = State(initialValue: PhrasesViewModel(container: container))
     }
 
     var body: some View {
@@ -17,32 +27,120 @@ struct WordsView: View {
                 AppColor.background.ignoresSafeArea()
                 VStack(alignment: .leading, spacing: 0) {
                     header
-                    searchField.padding(.top, 18)
-                    chips.padding(.top, 14)
-                    list
+                    sectionPicker.padding(.top, 16)
+                    // Разделы въезжают со своей стороны, как сегменты переключателя.
+                    switch section {
+                    case .words:
+                        VStack(alignment: .leading, spacing: 0) {
+                            searchField.padding(.top, 14)
+                            chips.padding(.top, 12)
+                            wordsList
+                        }
+                        .transition(.asymmetric(insertion: .offset(x: -36).combined(with: .opacity), removal: .opacity))
+                    case .idioms:
+                        PhrasesListView(viewModel: phrases, zoom: zoom) {
+                            addKind = .idiom
+                            isAdding = true
+                        } onOpen: { phrase in
+                            openedIdiom = phrase
+                        }
+                        .transition(.asymmetric(insertion: .offset(x: 36).combined(with: .opacity), removal: .opacity))
+                    }
                 }
                 .padding(.horizontal, 20)
+                .animation(Motion.swap, value: section)
             }
             .mnemisNavigationBarHidden()
-            .sheet(isPresented: $isAdding, onDismiss: { viewModel.load() }) {
-                AddWordView(viewModel: viewModel, initialLemma: viewModel.query)
+            .navigationDestination(isPresented: Binding(
+                get: { openedWord != nil },
+                set: { if !$0 { openedWord = nil } }
+            )) {
+                if let openedWord {
+                    WordDetailsView(word: openedWord, container: container, onChange: reloadAll)
+                        .navigationTransition(.zoom(sourceID: openedWord.id, in: zoom))
+                }
             }
-            .onAppear { viewModel.load() }
+            .navigationDestination(isPresented: Binding(
+                get: { openedIdiom != nil },
+                set: { if !$0 { openedIdiom = nil } }
+            )) {
+                if let openedIdiom {
+                    IdiomDetailsView(phrase: openedIdiom, container: container, onChange: { phrases.load() })
+                        .navigationTransition(.zoom(sourceID: openedIdiom.id, in: zoom))
+                }
+            }
+            .sheet(isPresented: $isAdding, onDismiss: reloadAll) {
+                // .id(addKind): начальный вид записи применяется заново при каждом открытии, а не сохраняется от прошлого раза.
+                AddEntryView(viewModel: viewModel, container: container, initialLemma: section == .words ? viewModel.query : "", initialKind: addKind) { _ in
+                    phrases.load()
+                }
+                .id(addKind)
+                .navigationTransition(.zoom(sourceID: Self.addSource, in: zoom))
+            }
+            .onAppear(perform: reloadAll)
         }
+    }
+
+    private func reloadAll() {
+        viewModel.load()
+        phrases.load()
     }
 
     private var header: some View {
         HStack(alignment: .bottom) {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Words").font(.mnemisTitle).tracking(-0.8).foregroundStyle(AppColor.ink)
-                Text("\(viewModel.words.count.formatted()) in your vocabulary")
+                Text(subtitle)
                     .font(.system(size: 12, design: .monospaced))
                     .foregroundStyle(AppColor.smoke)
             }
             Spacer()
-            RoundGlassButton(systemImage: "plus", label: "Add word") { isAdding = true }
+            RoundGlassButton(systemImage: "plus", label: section == .words ? "Add word" : "Add idiom") {
+                addKind = section == .words ? .word : .idiom
+                isAdding = true
+            }
+            .matchedTransitionSource(id: Self.addSource, in: zoom)
         }
         .padding(.top, 8)
+    }
+
+    private static let addSource = "add-entry"
+
+    private var subtitle: String {
+        switch section {
+        case .words: "\(viewModel.totalCount.formatted()) in your vocabulary"
+        case .idioms:
+            phrases.totalCount == 1 ? "1 idiom" : "\(phrases.totalCount.formatted()) idioms"
+        }
+    }
+
+    /// Переключатель «Words | Idioms»: вкладки словаря, как в дизайне.
+    private var sectionPicker: some View {
+        HStack(spacing: 4) {
+            ForEach(WordsSection.allCases) { item in
+                let selected = section == item
+                Button { withAnimation(Motion.swap) { section = item } } label: {
+                    HStack(spacing: 7) {
+                        Text(item.title)
+                        Text(item == .words ? viewModel.totalCount.formatted() : phrases.totalCount.formatted())
+                            .font(.system(size: 11, design: .monospaced)).opacity(0.7)
+                    }
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(selected ? AppColor.onPrimary : AppColor.ash)
+                    .frame(maxWidth: .infinity, minHeight: 38)
+                    .background {
+                        // Подложка выбранного сегмента скользит между ними, а не перескакивает.
+                        if selected {
+                            Capsule().fill(AppColor.primary).matchedGeometryEffect(id: "section-pill", in: pill)
+                        }
+                    }
+                }
+                .buttonStyle(PressScaleStyle())
+                .accessibilityAddTraits(selected ? [.isSelected] : [])
+            }
+        }
+        .padding(4)
+        .glassCapsule()
     }
 
     private var searchField: some View {
@@ -56,7 +154,7 @@ struct WordsView: View {
                 Button { viewModel.query = "" } label: {
                     Image(systemName: "xmark.circle.fill").foregroundStyle(AppColor.smoke)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(PressScaleStyle())
                 .accessibilityLabel(Text("Clear search"))
             }
         }
@@ -93,25 +191,25 @@ struct WordsView: View {
             .background(selected ? AppColor.primary : .clear, in: .capsule)
             .overlay(Capsule().stroke(selected ? .clear : AppColor.hairline))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressScaleStyle())
         .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
 
     @ViewBuilder
-    private var list: some View {
+    private var wordsList: some View {
         switch viewModel.state {
         case .loading:
             LoadingView()
         case .failed(let message):
             ErrorStateView(message: message)
         case .loaded:
-            if viewModel.words.isEmpty {
+            if viewModel.totalCount == 0 {
                 EmptyStateView(
                     title: "No words yet",
                     systemImage: "character.book.closed",
                     message: "Add your first word. It works offline.",
                     actionTitle: "Add Word",
-                    action: { isAdding = true }
+                    action: { addKind = .word; isAdding = true }
                 )
             } else if viewModel.results.isEmpty {
                 VStack(spacing: 12) {
@@ -120,7 +218,7 @@ struct WordsView: View {
                         .foregroundStyle(AppColor.faint)
                     Text("Nothing found").font(.system(size: 17, weight: .medium)).foregroundStyle(AppColor.ink)
                     if !viewModel.query.isEmpty {
-                        Button { isAdding = true } label: { Text("Add “\(viewModel.query)”") }
+                        Button { addKind = .word; isAdding = true } label: { Text("Add “\(viewModel.query)”") }
                             .buttonStyle(GlassButtonStyle(height: 44))
                             .fixedSize()
                     }
@@ -129,23 +227,55 @@ struct WordsView: View {
                 .padding(.top, 80)
                 Spacer()
             } else {
-                ScrollView {
-                    LazyVStack(spacing: 0) {
+                ScrollViewReader { proxy in
+                    List {
                         ForEach(viewModel.results) { word in
-                            NavigationLink {
-                                WordDetailsView(word: word, container: container, onChange: { viewModel.load() })
-                            } label: {
+                            Button { openedWord = word } label: {
                                 WordRow(word: word, status: viewModel.status(of: word))
+                                    .matchedTransitionSource(id: word.id, in: zoom)
                             }
-                            .buttonStyle(.plain)
-                            Divider().overlay(AppColor.hairline)
+                            .buttonStyle(PressScaleStyle())
+                            .listRowInsets(EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4))
+                            .listRowBackground(Color.clear)
+                            .listRowSeparatorTint(AppColor.hairline)
+                            .onAppear { viewModel.loadMoreIfNeeded(after: word) }
+                            .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                                Button { viewModel.markKnown(word) } label: { Label("I know", systemImage: "checkmark") }
+                                    .tint(AppColor.accent)
+                            }
+                            .swipeActions(edge: .trailing) {
+                                Button { viewModel.suspend(word) } label: { Label("Suspend", systemImage: "pause") }
+                                    .tint(AppColor.smoke)
+                            }
                         }
                     }
-                    .padding(.bottom, 24)
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
+                    .scrollIndicators(.hidden)
+                    .padding(.top, 8)
+                    .onChange(of: container.router.reselectCount) { _, _ in
+                        guard container.router.reselectedTab == .words, let first = viewModel.results.first?.id else { return }
+                        withAnimation(.smooth(duration: 0.35)) {
+                            proxy.scrollTo(first, anchor: .top)
+                        }
+                    }
                 }
-                .scrollIndicators(.hidden)
-                .padding(.top, 8)
             }
+        }
+    }
+}
+
+/// Два раздела словаря (ABOUT.md, раздел 9.1).
+enum WordsSection: String, CaseIterable, Identifiable {
+    case words
+    case idioms
+
+    var id: String { rawValue }
+
+    var title: LocalizedStringKey {
+        switch self {
+        case .words: "Words"
+        case .idioms: "Idioms"
         }
     }
 }

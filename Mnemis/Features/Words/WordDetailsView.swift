@@ -45,7 +45,7 @@ struct WordDetailsView: View {
             RoundGlassButton(systemImage: "chevron.left", label: "Back to Words") { dismiss() }
             Spacer()
             Button { isEditing = true } label: { Text("Edit").font(.system(size: 15, weight: .medium)).foregroundStyle(AppColor.ink).padding(.horizontal, 18).frame(minHeight: 44) }
-                .buttonStyle(.plain)
+                .buttonStyle(PressScaleStyle())
                 .glassCapsule()
         }
         .padding(.top, 8)
@@ -73,7 +73,11 @@ struct WordDetailsView: View {
 
     private var pills: [String] {
         var result: [String] = []
-        if let pos = viewModel.word.partOfSpeech { result.append(pos) }
+        if viewModel.word.meanings.count > 1 {
+            result += viewModel.word.meanings.map(\.partOfSpeech)
+        } else if let pos = viewModel.word.partOfSpeech {
+            result.append(pos)
+        }
         if let level = viewModel.word.level { result.append(level) }
         if let rank = viewModel.word.frequencyRank { result.append("freq #\(rank)") }
         result.append(viewModel.word.origin == .user ? "yours" : "built-in")
@@ -134,9 +138,7 @@ struct WordDetailsView: View {
     private var meaning: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("[ meaning ]").bracketLabel()
-            if !viewModel.word.translation.isEmpty {
-                Text(viewModel.word.translation).font(.system(size: 20, weight: .medium))
-            }
+            MeaningsList(meanings: viewModel.word.allMeanings, primarySize: 20)
             if let definition = viewModel.word.definition, !definition.isEmpty {
                 Text(definition).font(.system(size: 15)).foregroundStyle(AppColor.ash)
             }
@@ -163,7 +165,7 @@ struct WordDetailsView: View {
                     .foregroundStyle(AppColor.ink)
                     .onSubmit(addExample)
                 Button("Add", action: addExample)
-                    .buttonStyle(.plain)
+                    .buttonStyle(PressScaleStyle())
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(newExample.trimmingCharacters(in: .whitespaces).isEmpty ? AppColor.faint : AppColor.accent)
                     .disabled(newExample.trimmingCharacters(in: .whitespaces).isEmpty)
@@ -186,7 +188,7 @@ struct WordDetailsView: View {
                 .onSubmit { viewModel.saveNote(note) }
             if note != (viewModel.word.userNote ?? "") {
                 Button("Save note") { viewModel.saveNote(note) }
-                    .buttonStyle(.plain).font(.system(size: 14, weight: .medium)).foregroundStyle(AppColor.accent)
+                    .buttonStyle(PressScaleStyle()).font(.system(size: 14, weight: .medium)).foregroundStyle(AppColor.accent)
             }
         }
         .padding(.horizontal, 4)
@@ -201,7 +203,7 @@ struct WordDetailsView: View {
                 }
                 .font(.system(size: 14, weight: .medium)).foregroundStyle(AppColor.ash)
             }
-            .buttonStyle(.plain).disabled(viewModel.isEnriching)
+            .buttonStyle(PressScaleStyle()).disabled(viewModel.isEnriching)
             if let message = viewModel.message {
                 Text(message).font(.system(size: 12, design: .monospaced)).foregroundStyle(AppColor.smoke)
             }

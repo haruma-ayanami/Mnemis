@@ -16,6 +16,9 @@
     "[ a memory system ]" : {
 
     },
+    "[ account ]" : {
+
+    },
     "[ activity · 12 weeks ]" : {
 
     },
@@ -25,10 +28,25 @@
     "[ definition ]" : {
 
     },
+    "[ example · optional ]" : {
+
+    },
     "[ examples ]" : {
 
     },
+    "[ idiom · english ]" : {
+
+    },
+    "[ idiom of the day ]" : {
+
+    },
+    "[ in progress ]" : {
+
+    },
     "[ ipa ]" : {
+
+    },
+    "[ meaning · русский ]" : {
 
     },
     "[ meaning ]" : {
@@ -49,7 +67,13 @@
     "[ review ]" : {
 
     },
+    "[ save progress ]" : {
+
+    },
     "[ session complete ]" : {
+
+    },
+    "[ today's deck ]" : {
 
     },
     "[ translation · optional ]" : {
@@ -86,13 +110,7 @@
         }
       }
     },
-    "%@ in your vocabulary" : {
-
-    },
     "%lld" : {
-
-    },
-    "%lld days" : {
 
     },
     "%lld days done" : {
@@ -114,7 +132,13 @@
     "%lld%%" : {
 
     },
+    "^[%lld day](inflect: true)" : {
+
+    },
     "→" : {
+
+    },
+    "+" : {
 
     },
     "≈ %lld min a day" : {
@@ -162,13 +186,19 @@
     "A few new words a day. Mnemis decides what to review and when." : {
 
     },
+    "A joke helped break the ice." : {
+
+    },
     "a new word to guess" : {
 
     },
     "Abstract topics, nuance" : {
 
     },
-    "Academic and test vocabulary" : {
+    "Account" : {
+
+    },
+    "Account & data" : {
 
     },
     "accuracy" : {
@@ -181,6 +211,15 @@
 
     },
     "Add a word in Words, or there are no unlearned words left for your level." : {
+
+    },
+    "Add idiom" : {
+
+    },
+    "Add the meaning, so you can recall it." : {
+
+    },
+    "Add to my idioms" : {
 
     },
     "Add to my words" : {
@@ -198,7 +237,7 @@
     "Add your first word. It works offline." : {
 
     },
-    "after MVP" : {
+    "Advanced" : {
 
     },
     "Again" : {
@@ -222,6 +261,9 @@
     "Appearance" : {
 
     },
+    "Apple sign-in didn't complete. Try again." : {
+
+    },
     "At most per day" : {
 
     },
@@ -237,6 +279,15 @@
     "Back to Words" : {
 
     },
+    "Backup of words, notes and progress" : {
+
+    },
+    "Beginner" : {
+
+    },
+    "break the ice" : {
+
+    },
     "Cancel" : {
 
     },
@@ -250,6 +301,9 @@
         }
       }
     },
+    "cards · tap to start" : {
+
+    },
     "change any time in Settings → Notifications" : {
 
     },
@@ -257,6 +311,15 @@
 
     },
     "Continue" : {
+
+    },
+    "Continue session" : {
+
+    },
+    "Continue with Google" : {
+
+    },
+    "Continue without account" : {
 
     },
     "Daily activity over the last 12 weeks" : {
@@ -268,10 +331,16 @@
     "Dark" : {
 
     },
-    "Data" : {
+    "definition" : {
 
     },
-    "definition" : {
+    "Delete" : {
+
+    },
+    "Delete account" : {
+
+    },
+    "Delete account?" : {
 
     },
     "Done" : {
@@ -281,6 +350,9 @@
 
     },
     "Edit" : {
+
+    },
+    "Edit idiom" : {
 
     },
     "Elementary" : {
@@ -301,13 +373,16 @@
     "ex." : {
 
     },
-    "Exam prep" : {
-
-    },
     "Fetch details from sources" : {
 
     },
     "Fewer words" : {
+
+    },
+    "First everyday words" : {
+
+    },
+    "Found in Wiktionary · CC BY-SA" : {
 
     },
     "Gentle reminders, only when they help." : {
@@ -317,6 +392,12 @@
 
     },
     "Good" : {
+
+    },
+    "Google sign-in didn't complete. Try again." : {
+
+    },
+    "Google sign-in isn't available in this build yet." : {
 
     },
     "Guess the meaning, then check it." : {
@@ -331,10 +412,22 @@
     "I already know this word" : {
 
     },
+    "I know" : {
+
+    },
     "I know this" : {
 
     },
-    "iCloud sync" : {
+    "idiom" : {
+
+    },
+    "Idiom" : {
+
+    },
+    "Idioms" : {
+
+    },
+    "Idioms in Today" : {
 
     },
     "in %@ · %lld words" : {
@@ -356,6 +449,9 @@
     "Keep your streak" : {
 
     },
+    "Keep your words safe" : {
+
+    },
     "Known" : {
 
     },
@@ -366,6 +462,9 @@
 
     },
     "last 30 days" : {
+
+    },
+    "Last synced" : {
 
     },
     "Learn" : {
@@ -386,13 +485,22 @@
     "less" : {
 
     },
+    "level" : {
+
+    },
     "Level" : {
 
     },
     "Light" : {
 
     },
+    "local only" : {
+
+    },
     "local only · no account needed" : {
+
+    },
+    "Looking up in Wiktionary…" : {
 
     },
     "Memory strength %lld of %lld" : {
@@ -411,13 +519,22 @@
     "mnemis" : {
 
     },
-    "mnemis 0.2 · local-first · no account" : {
+    "mnemis 0.2 · local-first · sign-in optional" : {
 
     },
     "more" : {
 
     },
     "More words" : {
+
+    },
+    "never" : {
+
+    },
+    "new" : {
+
+    },
+    "New idiom" : {
 
     },
     "new today" : {
@@ -435,16 +552,25 @@
     "next review" : {
 
     },
-    "no account · works offline" : {
+    "No connection. Write the meaning yourself, the idiom is saved offline." : {
+
+    },
+    "No idioms yet" : {
 
     },
     "No internet? The word is saved anyway. Details can be added later." : {
+
+    },
+    "no password stored · you can sign in later in Settings" : {
 
     },
     "No word for today" : {
 
     },
     "No words yet" : {
+
+    },
+    "Not in the open dictionary. Write the meaning yourself." : {
 
     },
     "Not now" : {
@@ -474,6 +600,9 @@
     "Off" : {
 
     },
+    "on" : {
+
+    },
     "On" : {
 
     },
@@ -483,10 +612,19 @@
     "only if you skipped today" : {
 
     },
+    "Optional. Sync your words, notes and progress between your devices." : {
+
+    },
     "Play pronunciation" : {
 
     },
     "Preview" : {
+
+    },
+    "Progress & reviews" : {
+
+    },
+    "Pronunciation audio" : {
 
     },
     "Pronunciation sound" : {
@@ -505,6 +643,9 @@
 
     },
     "Remind me in 1 hour" : {
+
+    },
+    "Restore after reinstalling" : {
 
     },
     "Results" : {
@@ -531,13 +672,22 @@
     "RU" : {
 
     },
+    "Same words on every device" : {
+
+    },
     "Save" : {
+
+    },
+    "Save an idiom you want to remember. Its meaning comes from Wiktionary, and it shows up in Today." : {
 
     },
     "Save note" : {
 
     },
     "Schedule" : {
+
+    },
+    "Search idioms and meanings" : {
 
     },
     "Search word, translation, note" : {
@@ -558,16 +708,40 @@
     "Show answer for %@" : {
 
     },
+    "sign in" : {
+
+    },
+    "Sign in" : {
+
+    },
+    "Sign in to back up your words and sync them between your devices. Learning works fully offline either way." : {
+
+    },
+    "Sign out" : {
+
+    },
+    "sign-in optional · works offline" : {
+
+    },
+    "signed in" : {
+
+    },
+    "signed out" : {
+
+    },
+    "signing out keeps your words on this device" : {
+
+    },
     "Something went wrong" : {
 
     },
     "src" : {
 
     },
-    "Start learning" : {
+    "Start session" : {
 
     },
-    "Start session" : {
+    "Start session, %lld cards" : {
 
     },
     "Statistics" : {
@@ -585,13 +759,28 @@
     "Streak reminder" : {
 
     },
+    "Subtle meaning, academic texts" : {
+
+    },
     "Suspend" : {
+
+    },
+    "Sync" : {
+
+    },
+    "Sync words & progress" : {
 
     },
     "System" : {
 
     },
+    "This idiom is already in your list." : {
+
+    },
     "This week" : {
+
+    },
+    "This word is already in your list." : {
 
     },
     "Time" : {
@@ -609,13 +798,22 @@
     "translation" : {
 
     },
+    "Type an idiom: meaning and example come from Wiktionary." : {
+
+    },
     "Types" : {
 
     },
     "Upper-intermediate" : {
 
     },
+    "via %@" : {
+
+    },
     "We pick daily words for this level. You can change it later." : {
+
+    },
+    "What syncs" : {
 
     },
     "when words are due" : {
@@ -624,10 +822,16 @@
     "Where do you start?" : {
 
     },
+    "Word" : {
+
+    },
     "Word of the day" : {
 
     },
     "Words" : {
+
+    },
+    "Words & notes" : {
 
     },
     "Words are ready to review" : {
@@ -636,7 +840,13 @@
     "words learned · %@" : {
 
     },
+    "words on this device stay after sign-out or deletion." : {
+
+    },
     "Work, travel, opinions" : {
+
+    },
+    "Write the idiom." : {
 
     },
     "you" : {
@@ -646,6 +856,12 @@
 
     },
     "Your word of the day" : {
+
+    },
+    "Your words on this device stay. Only the sign-in is removed." : {
+
+    },
+    "разрядить обстановку" : {
 
     },
     "счастливая случайность" : {

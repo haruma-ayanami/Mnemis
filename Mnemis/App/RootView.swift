@@ -10,10 +10,24 @@ struct RootView: View {
         self.router = container.router
     }
 
+    /// Выбор вкладки. Нажатие на уже открытую вкладку не меняет её, а сообщает экрану о повторном нажатии.
+    private var tabSelection: Binding<AppTab> {
+        Binding(
+            get: { router.selectedTab },
+            set: { tab in
+                if tab == router.selectedTab {
+                    router.reselect(tab)
+                } else {
+                    router.selectedTab = tab
+                }
+            }
+        )
+    }
+
     var body: some View {
         Group {
             if router.isOnboarded {
-                TabView(selection: $router.selectedTab) {
+                TabView(selection: tabSelection) {
                     Tab("Today", systemImage: "sun.max", value: AppTab.today) {
                         TodayView(container: container)
                     }
@@ -30,6 +44,8 @@ struct RootView: View {
                         SettingsView(container: container)
                     }
                 }
+                // При прокрутке вниз панель сжимается до текущей вкладки, при прокрутке вверх раскрывается.
+                .tabBarMinimizeBehavior(.onScrollDown)
             } else {
                 OnboardingView(container: container)
             }

@@ -3,6 +3,7 @@ import SwiftUI
 /// Главный экран: слово дня, повторения, серия и неделя (ABOUT.md, раздел 15).
 struct TodayView: View {
     @State private var viewModel: TodayViewModel
+    @State private var cardTab: DailyCardTab = .word
 
     init(container: AppContainer) {
         _viewModel = State(initialValue: TodayViewModel(container: container))
@@ -40,13 +41,14 @@ struct TodayView: View {
             ErrorStateView(message: message)
         case .loaded:
             ScrollView {
+                // Блоки появляются по очереди сверху вниз: взгляд идёт от слова дня к кнопке сессии.
                 VStack(alignment: .leading, spacing: 12) {
-                    header
+                    header.screenEntrance()
                     Spacer().frame(height: 70)
-                    wordCard
-                    tiles
-                    WeekStrip(days: viewModel.week)
-                    startButton
+                    wordCard.screenEntrance(delay: 0.05)
+                    tiles.screenEntrance(delay: 0.1)
+                    WeekStrip(days: viewModel.week).screenEntrance(delay: 0.14)
+                    startButton.screenEntrance(delay: 0.18)
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 8)
@@ -70,7 +72,7 @@ struct TodayView: View {
             HStack(spacing: 7) {
                 Circle().fill(AppColor.fill).frame(width: 8, height: 8)
                     .shadow(color: AppColor.glow.opacity(0.9), radius: 5)
-                Text("\(viewModel.streak) days")
+                Text("^[\(viewModel.streak) day](inflect: true)")
                     .font(.system(size: 13, design: .monospaced))
             }
             .foregroundStyle(AppColor.ink)
@@ -82,6 +84,25 @@ struct TodayView: View {
 
     @ViewBuilder
     private var wordCard: some View {
+        if let phrase = viewModel.phrase {
+            VStack(alignment: .leading, spacing: 12) {
+                DailyCardTabs(selection: $cardTab)
+                if cardTab == .phrase {
+                    PhraseCard(phrase: phrase)
+                        .transition(.asymmetric(insertion: .offset(x: 32).combined(with: .opacity), removal: .opacity))
+                } else {
+                    dailyWordCard
+                        .transition(.asymmetric(insertion: .offset(x: -32).combined(with: .opacity), removal: .opacity))
+                }
+            }
+            .animation(Motion.swap, value: cardTab)
+        } else {
+            dailyWordCard
+        }
+    }
+
+    @ViewBuilder
+    private var dailyWordCard: some View {
         if let word = viewModel.dailyWord {
             WordCard(word: word, example: viewModel.dailyExample)
         } else {

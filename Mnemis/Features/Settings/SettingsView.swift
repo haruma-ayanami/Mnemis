@@ -3,8 +3,10 @@ import SwiftUI
 /// Настройки: обучение, уведомления, вид, данные и лицензии.
 struct SettingsView: View {
     @State private var viewModel: SettingsViewModel
+    private let container: AppContainer
 
     init(container: AppContainer) {
+        self.container = container
         _viewModel = State(initialValue: SettingsViewModel(container: container))
     }
 
@@ -20,7 +22,7 @@ struct SettingsView: View {
                         notifications
                         appearance
                         data
-                        Text("mnemis 0.2 · local-first · no account")
+                        Text("mnemis 0.2 · local-first · sign-in optional")
                             .font(.system(size: 11, design: .monospaced)).foregroundStyle(AppColor.smoke)
                             .frame(maxWidth: .infinity).padding(.top, 4)
                         if let message = viewModel.errorMessage {
@@ -68,6 +70,12 @@ struct SettingsView: View {
                     .labelsHidden()
                 }
             }
+            Toggle(isOn: Binding(get: { viewModel.settings.phrasesInToday }, set: { viewModel.setPhrasesInToday($0) })) {
+                Text("Idioms in Today")
+                    .font(.system(size: 16)).foregroundStyle(AppColor.ink)
+            }
+            .toggleStyle(GlowToggleStyle())
+            .padding(.horizontal, 16).frame(minHeight: 54)
         }
     }
 
@@ -83,7 +91,7 @@ struct SettingsView: View {
                     }
                 }
             }
-            .buttonStyle(.plain)
+            .buttonStyle(PressScaleStyle())
             Toggle("Pronunciation sound", isOn: Binding(get: { viewModel.settings.soundEnabled }, set: { viewModel.setSound($0) }))
                 .toggleStyle(GlowToggleStyle())
                 .padding(.horizontal, 16).frame(minHeight: 54)
@@ -106,7 +114,7 @@ struct SettingsView: View {
                         .frame(maxWidth: .infinity, minHeight: 36)
                         .background(selected ? AppColor.hairline : .clear, in: .capsule)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(PressScaleStyle())
                     .accessibilityAddTraits(selected ? [.isSelected] : [])
                 }
             }
@@ -116,10 +124,22 @@ struct SettingsView: View {
     }
 
     private var data: some View {
-        SettingsGroup(title: "Data") {
-            SettingsRow(title: "iCloud sync") {
-                Text("after MVP").font(.system(size: 11, design: .monospaced)).foregroundStyle(AppColor.smoke)
+        SettingsGroup(title: "Account & data") {
+            NavigationLink {
+                if container.account.session == nil {
+                    AccountLoginView(container: container)
+                } else {
+                    AccountProfileView(container: container)
+                }
+            } label: {
+                SettingsRow(title: "Account") {
+                    HStack(spacing: 8) {
+                        Text(viewModel.accountRowValue).font(.system(size: 14, design: .monospaced)).foregroundStyle(AppColor.ash)
+                        Image(systemName: "chevron.right").font(.system(size: 12, weight: .semibold)).foregroundStyle(AppColor.faint)
+                    }
+                }
             }
+            .buttonStyle(PressScaleStyle())
             ForEach(viewModel.sources) { source in
                 DisclosureGroup {
                     Text(source.licenseText)

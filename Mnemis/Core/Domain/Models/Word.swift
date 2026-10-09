@@ -7,9 +7,12 @@ struct Word: Identifiable, Equatable, Sendable {
     var lemma: String
     var learningLanguage: LanguageCode
     var translationLanguage: LanguageCode
-    /// Основной перевод. Несколько значений (`WordMeaning`) — после MVP.
+    /// Основной перевод: перевод первой части речи. По нему идёт список слов и поиск.
     var translation: String
     var partOfSpeech: String?
+    /// Значения по частям речи, например `book`: «noun · книга», «verb · бронировать».
+    /// Пусто, если у слова одна часть речи: тогда хватает `translation` и `partOfSpeech`.
+    var meanings: [WordMeaning]
     var definition: String?
     var ipa: String?
     var audioURL: URL?
@@ -30,6 +33,7 @@ struct Word: Identifiable, Equatable, Sendable {
         translationLanguage: LanguageCode = .ru,
         translation: String = "",
         partOfSpeech: String? = nil,
+        meanings: [WordMeaning] = [],
         definition: String? = nil,
         ipa: String? = nil,
         audioURL: URL? = nil,
@@ -47,6 +51,7 @@ struct Word: Identifiable, Equatable, Sendable {
         self.translationLanguage = translationLanguage
         self.translation = translation
         self.partOfSpeech = partOfSpeech
+        self.meanings = meanings
         self.definition = definition
         self.ipa = ipa
         self.audioURL = audioURL
@@ -60,6 +65,31 @@ struct Word: Identifiable, Equatable, Sendable {
         self.updatedAt = createdAt
     }
 
+    /// Все значения для показа: части речи по порядку. Для слова без `meanings` — одно значение из `translation`.
+    var allMeanings: [WordMeaning] {
+        guard meanings.isEmpty else { return meanings }
+        guard !translation.isEmpty else { return [] }
+        return [WordMeaning(partOfSpeech: partOfSpeech ?? "", translation: translation)]
+    }
+
     /// Нормализованная форма для поиска и защиты от дублей.
     var normalizedLemma: String { TextNormalizer.normalize(lemma) }
+}
+
+/// Перевод для одной части речи.
+struct WordMeaning: Codable, Equatable, Sendable {
+    var partOfSpeech: String
+    var translation: String
+
+    /// Короткая метка части речи для карточек: `n`, `v`, `adj`, `adv`, `prep`.
+    var shortPartOfSpeech: String {
+        switch partOfSpeech {
+        case "noun": "n"
+        case "verb": "v"
+        case "adjective": "adj"
+        case "adverb": "adv"
+        case "preposition": "prep"
+        default: partOfSpeech
+        }
+    }
 }

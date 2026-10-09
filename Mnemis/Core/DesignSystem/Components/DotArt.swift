@@ -2,6 +2,8 @@ import SwiftUI
 
 /// Сфера из точек: зелёный сверху переходит в белый и серый снизу. Символ словаря пользователя.
 /// Рисуется один раз, детерминированно, без анимации (Reduce Motion не нужен).
+/// Геометрия не зависит от размера view: считается один раз на количество точек.
+/// Точки группируются по цвету и прозрачности, поэтому на кадр уходят десятки заливок, а не тысячи.
 struct DotSphere: View {
     var dotCount = 2600
 
@@ -9,42 +11,90 @@ struct DotSphere: View {
         Canvas { context, size in
             let radius = min(size.width, size.height) / 2
             let center = CGPoint(x: size.width / 2, y: size.height / 2)
-            let golden = Double.pi * (3 - 5.0.squareRoot())
 
-            for i in 0..<dotCount {
-                // Равномерное распределение по сфере (спираль Фибоначчи), наклон оси ~20°.
-                let y = 1 - 2 * (Double(i) + 0.5) / Double(dotCount)
-                let r = (1 - y * y).squareRoot()
-                let theta = golden * Double(i)
-                var x = cos(theta) * r
-                var z = sin(theta) * r
-                let tilt = 0.35
-                let yy = y * cos(tilt) - z * sin(tilt)
-                z = y * sin(tilt) + z * cos(tilt)
-                x = x
-
-                // Заднюю полусферу прячем: виден только «передний» слой, как в референсе.
-                let depth = (z + 1) / 2
-                let rim = 1 - abs(z)
-                let t = (yy + 1) / 2   // 1 — верх, 0 — низ
-                let color: Color
-                if t > 0.62 {
-                    color = AppColor.fill
-                } else if t > 0.45 {
-                    color = AppColor.fill.mix(with: AppColor.ink, by: (0.62 - t) / 0.17)
-                } else {
-                    color = AppColor.ink.opacity(0.55 + 0.45 * t)
-                }
-                let alpha = 0.18 + 0.82 * max(depth, rim * 0.8)
-                let dot = 1.2 + 1.4 * depth
-                let point = CGPoint(x: center.x + x * radius, y: center.y - yy * radius)
-                context.fill(
-                    Path(ellipseIn: CGRect(x: point.x - dot / 2, y: point.y - dot / 2, width: dot, height: dot)),
-                    with: .color(color.opacity(alpha))
-                )
+            var groups: [Int: Path] = [:]
+            for dot in DotSphereGeometry.dots(count: dotCount) {
+                let x = center.x + dot.x * radius
+                let y = center.y - dot.y * radius
+                let d = dot.diameter
+                groups[dot.group, default: Path()].addEllipse(in: CGRect(x: x - d / 2, y: y - d / 2, width: d, height: d))
+            }
+            for (group, path) in groups {
+                let shade = DotSphereGeometry.shade(for: group)
+                context.fill(path, with: .color(shade.color.opacity(shade.alpha)))
             }
         }
+        .drawingGroup()
         .accessibilityHidden(true)
+    }
+}
+
+/// Геометрия сферы из точек: спираль Фибоначчи с наклоном оси ~20°. Кэшируется по количеству точек.
+enum DotSphereGeometry {
+    struct Dot {
+        /// Координаты в долях радиуса, от -1 до 1. `y` растёт вверх.
+        let x: Double
+        let y: Double
+        let diameter: Double
+        /// Группа заливки: цвет и прозрачность. Одинаковые группы рисуются одним путём.
+        let group: Int
+    }
+
+    private static let alphaSteps = 20
+    private static var cache: [Int: [Dot]] = [:]
+
+    static func dots(count: Int) -> [Dot] {
+        if let cached = cache[count] { return cached }
+        let built = build(count: count)
+        cache[count] = built
+        return built
+    }
+
+    /// Цвет и прозрачность группы. Цвет: зелёный сверху, смесь к серому внизу, серый у низа.
+    static func shade(for group: Int) -> (color: Color, alpha: Double) {
+        let colorKey = group / (alphaSteps + 1) - 1
+        let alpha = Double(group % (alphaSteps + 1)) / Double(alphaSteps)
+        switch colorKey {
+        case -1: return (AppColor.fill, alpha)
+        case 8: return (AppColor.ink, alpha)
+        default: return (AppColor.fill.mix(with: AppColor.ink, by: Double(colorKey) / 7), alpha)
+        }
+    }
+
+    private static func build(count: Int) -> [Dot] {
+        let golden = Double.pi * (3 - 5.0.squareRoot())
+        let tilt = 0.35
+        return (0..<count).map { i in
+            let y = 1 - 2 * (Double(i) + 0.5) / Double(count)
+            let r = (1 - y * y).squareRoot()
+            let theta = golden * Double(i)
+            let x = cos(theta) * r
+            let z0 = sin(theta) * r
+            let yy = y * cos(tilt) - z0 * sin(tilt)
+            let z = y * sin(tilt) + z0 * cos(tilt)
+
+            // Заднюю полусферу прячем: виден только «передний» слой, как в референсе.
+            let depth = (z + 1) / 2
+            let rim = 1 - abs(z)
+            let t = (yy + 1) / 2   // 1 — верх, 0 — низ
+            let alpha = 0.18 + 0.82 * max(depth, rim * 0.8)
+            let diameter = 1.2 + 1.4 * depth
+
+            let colorKey: Int
+            let alphaMultiplier: Double
+            if t > 0.62 {
+                colorKey = -1
+                alphaMultiplier = 1
+            } else if t > 0.45 {
+                colorKey = Int(((0.62 - t) / 0.17 * 7).rounded())
+                alphaMultiplier = 1
+            } else {
+                colorKey = 8
+                alphaMultiplier = 0.55 + 0.45 * t
+            }
+            let alphaStep = Int((alpha * alphaMultiplier * Double(alphaSteps)).rounded())
+            return Dot(x: x, y: yy, diameter: diameter, group: (colorKey + 1) * (alphaSteps + 1) + alphaStep)
+        }
     }
 }
 
@@ -63,11 +113,16 @@ struct GlowHalo: View {
 
 /// Концентрические кольца из точек: режим фокуса на экранах обучения.
 struct DotRings: View {
+    /// Число уровней прозрачности: точки группируются по уровню, а не рисуются каждая отдельно.
+    private static let levels = 12
+
     var body: some View {
         Canvas { context, size in
             let center = CGPoint(x: size.width / 2, y: size.height / 2)
             let maxR = min(size.width, size.height) / 2
-            let step: CGFloat = 7
+            let step: CGFloat = 9
+
+            var levels: [Int: Path] = [:]
             var gy: CGFloat = 0
             while gy < size.height {
                 var gx: CGFloat = 0
@@ -79,17 +134,20 @@ struct DotRings: View {
                         let falloff = sin(min(dist, 1) * .pi)
                         let a = wave * falloff * 0.55
                         if a > 0.06 {
-                            context.fill(
-                                Path(ellipseIn: CGRect(x: gx - 0.9, y: gy - 0.9, width: 1.8, height: 1.8)),
-                                with: .color(AppColor.ink.opacity(a))
-                            )
+                            let level = min(Self.levels - 1, Int(a / 0.55 * Double(Self.levels)))
+                            levels[level, default: Path()].addEllipse(in: CGRect(x: gx - 0.9, y: gy - 0.9, width: 1.8, height: 1.8))
                         }
                     }
                     gx += step
                 }
                 gy += step
             }
+            for (level, path) in levels {
+                let alpha = (Double(level) + 0.5) / Double(Self.levels) * 0.55
+                context.fill(path, with: .color(AppColor.ink.opacity(alpha)))
+            }
         }
+        .drawingGroup()
         .accessibilityHidden(true)
     }
 }
@@ -118,6 +176,7 @@ struct MeshFloor: View {
             }
         }
         .mask(LinearGradient(colors: [.clear, .black], startPoint: .top, endPoint: .bottom))
+        .drawingGroup()
         .accessibilityHidden(true)
     }
 }
@@ -223,7 +282,7 @@ struct GlowToggleStyle: ToggleStyle {
             }
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressScaleStyle())
         .accessibilityAddTraits(.isToggle)
         .accessibilityValue(configuration.isOn ? Text("On") : Text("Off"))
     }

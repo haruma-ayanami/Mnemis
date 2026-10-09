@@ -21,7 +21,11 @@ struct StatTile: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             HStack(alignment: .firstTextBaseline, spacing: 1) {
-                Text(text).font(.mnemisCounter)
+                // Числа меняются плавно: цифры «прокручиваются», а не прыгают.
+                Text(text)
+                    .font(.mnemisCounter)
+                    .contentTransition(.numericText())
+                    .animation(.smooth(duration: 0.4), value: text)
                 if let secondary {
                     Text(secondary)
                         .font(.system(size: 14, design: .monospaced))

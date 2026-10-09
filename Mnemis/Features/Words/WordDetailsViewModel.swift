@@ -50,9 +50,16 @@ final class WordDetailsViewModel {
         perform { try container.wordEditor.update(updated) }
     }
 
-    func update(translation: String, definition: String, ipa: String) {
+    /// Сохраняет правку значений. Пустое значение удаляется; первое оставшееся становится основным переводом.
+    func update(meanings: [WordMeaning], definition: String, ipa: String) {
         var updated = word
-        updated.translation = translation.trimmingCharacters(in: .whitespacesAndNewlines)
+        let kept = meanings
+            .map { WordMeaning(partOfSpeech: $0.partOfSpeech, translation: $0.translation.trimmingCharacters(in: .whitespacesAndNewlines)) }
+            .filter { !$0.translation.isEmpty }
+        updated.translation = kept.first?.translation ?? ""
+        if let first = kept.first, !first.partOfSpeech.isEmpty { updated.partOfSpeech = first.partOfSpeech }
+        // Одно значение хранится как обычный перевод, без списка.
+        updated.meanings = kept.count > 1 ? kept : []
         updated.definition = definition.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
         updated.ipa = ipa.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
         perform { try container.wordEditor.update(updated) }

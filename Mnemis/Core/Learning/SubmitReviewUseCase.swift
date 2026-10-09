@@ -10,6 +10,7 @@ enum ReviewError: Error, Equatable {
 struct SubmitReviewUseCase {
     let progress: ProgressRepository
     let reviews: ReviewRepository
+    let activity: DailyActivityRepository
     let persistence: PersistenceController
     let engine: any SpacedRepetitionEngine
     let clock: any Clock
@@ -38,6 +39,11 @@ struct SubmitReviewUseCase {
             responseDurationMilliseconds: responseDurationMilliseconds,
             sessionID: sessionID
         ))
+        try activity.recordReview(
+            correct: rating.isCorrect,
+            dayID: LocalDay.id(for: now, calendar: clock.calendar),
+            dayStart: LocalDay.start(of: now, calendar: clock.calendar)
+        )
         try persistence.save()
         return updated
     }

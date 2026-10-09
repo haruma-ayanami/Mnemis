@@ -9,9 +9,7 @@ struct LocalDictionaryProvider: DictionaryProvider {
 
     func entry(for lemma: String) async throws -> DictionaryEntry? {
         let key = TextNormalizer.normalize(lemma)
-        guard let word = try words.allWords().first(where: {
-            $0.normalizedLemma == key && $0.origin != .user
-        }) else { return nil }
+        guard let word = try words.words(normalizedLemma: key).first(where: { $0.origin != .user }) else { return nil }
 
         let examples = try words.examples(forWordID: word.id)
             .filter { !$0.isUserCreated }

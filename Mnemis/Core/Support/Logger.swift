@@ -7,4 +7,5 @@ enum Log {
     static let persistence = Logger(subsystem: subsystem, category: "persistence")
     static let network = Logger(subsystem: subsystem, category: "network")
     static let learning = Logger(subsystem: subsystem, category: "learning")
+    static let account = Logger(subsystem: subsystem, category: "account")
 }

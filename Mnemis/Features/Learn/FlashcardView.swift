@@ -1,5 +1,20 @@
 import SwiftUI
 
+/// Поворот карточки вокруг вертикальной оси: вопрос уходит на 90°, ответ приходит с другой стороны (спецификация «Motion»).
+private struct FlipEffect: ViewModifier {
+    let angle: Double
+
+    func body(content: Content) -> some View {
+        content.rotation3DEffect(.degrees(angle), axis: (x: 0, y: 1, z: 0), perspective: 0.45)
+    }
+}
+
+private extension AnyTransition {
+    static func flip(from angle: Double) -> AnyTransition {
+        .modifier(active: FlipEffect(angle: angle), identity: FlipEffect(angle: 0)).combined(with: .opacity)
+    }
+}
+
 /// Флэшкарта (ABOUT.md, раздел 7): сначала слово, затем ответ и оценка Again/Hard/Good/Easy.
 struct FlashcardView: View {
     let viewModel: LearnViewModel
@@ -7,25 +22,22 @@ struct FlashcardView: View {
     let onClose: () -> Void
 
     @State private var isRevealed = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ZStack {
-            DecorLayer {
-                DotRings()
-                    .frame(width: 610, height: 610)
-                    .opacity(isRevealed ? 0.22 : 0.5)
-                    .offset(y: isRevealed ? -200 : 0)
-            }
-
             VStack(spacing: 0) {
                 header
                 if isRevealed {
-                    answerCard.padding(.top, 30)
+                    answerCard
+                        .padding(.top, 30)
+                        .transition(cardTransition(angle: 90))
                     Spacer(minLength: 12)
                     ratingRow
                 } else {
                     Spacer()
                     questionCard
+                        .transition(cardTransition(angle: -90))
                     Spacer()
                     questionActions
                 }
@@ -33,7 +45,12 @@ struct FlashcardView: View {
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
         }
-        .animation(.smooth(duration: 0.25), value: isRevealed)
+        .animation(reduceMotion ? .easeInOut(duration: 0.2) : .spring(response: 0.45, dampingFraction: 0.86), value: isRevealed)
+    }
+
+    /// С Reduce Motion карточка просто плавно появляется, без поворота.
+    private func cardTransition(angle: Double) -> AnyTransition {
+        reduceMotion ? .opacity : .flip(from: angle)
     }
 
     // MARK: - Части
@@ -84,7 +101,7 @@ struct FlashcardView: View {
             .glassCard(cornerRadius: 36)
             .cornerMarks(inset: 14)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressScaleStyle())
         .accessibilityLabel(Text("Show answer for \(word.lemma)"))
     }
 
@@ -104,7 +121,7 @@ struct FlashcardView: View {
                     Text(word.lemma)
                         .font(.system(size: 42, weight: .semibold)).tracking(-1.5)
                         .minimumScaleFactor(0.6).lineLimit(1)
-                    Text([word.ipa, word.partOfSpeech.map(Self.abbreviation), word.level].compactMap { $0 }.joined(separator: " · "))
+                    Text([word.ipa, word.meanings.count > 1 ? nil : word.partOfSpeech.map(Self.abbreviation), word.level].compactMap { $0 }.joined(separator: " · "))
                         .font(.system(size: 15, design: .monospaced))
                         .foregroundStyle(AppColor.ash)
                 }
@@ -112,8 +129,7 @@ struct FlashcardView: View {
                 SpeakButton(text: word.lemma)
             }
             AsciiDivider()
-            Text(word.translation)
-                .font(.system(size: 25, weight: .medium)).tracking(-0.3)
+            MeaningsList(meanings: word.allMeanings, primarySize: 25)
             if let definition = word.definition {
                 Text(definition).font(.system(size: 16)).foregroundStyle(AppColor.ash)
             }
@@ -158,6 +174,7 @@ struct FlashcardView: View {
         case "verb": "v"
         case "adjective": "adj"
         case "adverb": "adv"
+        case "preposition": "prep"
         default: partOfSpeech
         }
     }
@@ -194,7 +211,7 @@ private struct RatingButton: View {
             }
             .modifier(RatingGlass(isEasy: rating == .easy))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressScaleStyle())
         .accessibilityLabel(Text(title))
         .accessibilityValue(Text(interval))
     }
@@ -229,7 +246,7 @@ struct SpeakButton: View {
                 .frame(width: 44, height: 44)
                 .overlay(Circle().stroke(AppColor.hairline))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressScaleStyle())
         .accessibilityLabel(Text("Play pronunciation"))
     }
 }

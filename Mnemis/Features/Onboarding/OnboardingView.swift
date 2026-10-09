@@ -1,3 +1,4 @@
+import AuthenticationServices
 import SwiftUI
 
 /// Первый запуск: приветствие, уровень, темп, уведомления (ABOUT.md, раздел 29). Регистрация не нужна.
@@ -15,6 +16,7 @@ struct OnboardingView: View {
             case .welcome: WelcomeStep(viewModel: viewModel)
             case .level: LevelStep(viewModel: viewModel)
             case .pace: PaceStep(viewModel: viewModel)
+            case .account: AccountStep(viewModel: viewModel)
             case .notifications: NotificationsStep(viewModel: viewModel)
             }
         }
@@ -24,19 +26,20 @@ struct OnboardingView: View {
 
 // MARK: - Общие части
 
+/// Точки прогресса по трём шагам: 0 — приветствие, 1 — уровень, 2 — темп.
 private struct StepDots: View {
-    let current: OnboardingStep
+    let index: Int
 
     var body: some View {
         HStack(spacing: 6) {
-            ForEach(0..<3, id: \.self) { index in
-                Text(index == min(current.rawValue, 2) ? "●" : "○")
-                    .foregroundStyle(index == min(current.rawValue, 2) ? AppColor.accent : AppColor.faint)
+            ForEach(0..<3, id: \.self) { step in
+                Text(step == index ? "●" : "○")
+                    .foregroundStyle(step == index ? AppColor.accent : AppColor.faint)
             }
         }
         .font(.system(size: 14, design: .monospaced))
         .accessibilityElement()
-        .accessibilityLabel(Text("Step \(min(current.rawValue, 2) + 1) of 3"))
+        .accessibilityLabel(Text("Step \(index + 1) of 3"))
     }
 }
 
@@ -118,10 +121,10 @@ private struct WelcomeStep: View {
                     }
                 }
                 .buttonStyle(PrimaryButtonStyle())
-                Text("no account · works offline")
+                Text("sign-in optional · works offline")
                     .font(.system(size: 12, design: .monospaced))
                     .foregroundStyle(AppColor.smoke)
-                StepDots(current: .welcome)
+                StepDots(index: 0)
             }
             .padding(.top, 32)
         }
@@ -148,11 +151,13 @@ private struct WelcomeStep: View {
 private struct LevelStep: View {
     @Bindable var viewModel: OnboardingViewModel
 
+    /// Шкала CEFR от A1 до C1 (ABOUT.md, раздел 13).
     private let info: [LanguageLevel: (name: LocalizedStringKey, hint: LocalizedStringKey)] = [
+        .a1: ("Beginner", "First everyday words"),
         .a2: ("Elementary", "Everyday words and phrases"),
         .b1: ("Intermediate", "Work, travel, opinions"),
         .b2: ("Upper-intermediate", "Abstract topics, nuance"),
-        .ielts: ("Exam prep", "Academic and test vocabulary"),
+        .c1: ("Advanced", "Subtle meaning, academic texts"),
     ]
 
     var body: some View {
@@ -167,7 +172,7 @@ private struct LevelStep: View {
                     Button { viewModel.level = level } label: {
                         HStack(spacing: 16) {
                             Text(level.rawValue)
-                                .font(.system(size: level == .ielts ? 16 : 20, weight: .medium, design: .monospaced))
+                                .font(.system(size: 20, weight: .medium, design: .monospaced))
                                 .foregroundStyle(selected ? AppColor.accent : AppColor.ash)
                                 .frame(width: 56, alignment: .leading)
                             VStack(alignment: .leading, spacing: 3) {
@@ -190,11 +195,13 @@ private struct LevelStep: View {
                         }
                         .modifier(SelectedGlass(selected: selected))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(PressScaleStyle())
                     .accessibilityAddTraits(selected ? [.isSelected] : [])
                 }
             }
             .padding(.top, 28)
+            .animation(.snappy(duration: 0.15), value: viewModel.level)
+            .mnemisHaptic(.selection, trigger: viewModel.level)
 
             Spacer()
             VStack(spacing: 14) {
@@ -202,7 +209,7 @@ private struct LevelStep: View {
                     HStack(spacing: 10) { Text("Continue"); Text("→").font(.system(size: 15, design: .monospaced)) }
                 }
                 .buttonStyle(PrimaryButtonStyle())
-                StepDots(current: .level)
+                StepDots(index: 1)
             }
         }
         .padding(24)
@@ -271,7 +278,7 @@ private struct PaceStep: View {
                                 .background(viewModel.newWordsPerDay == value ? AppColor.hairline : .clear, in: .capsule)
                                 .foregroundStyle(viewModel.newWordsPerDay == value ? AppColor.ink : AppColor.ash)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(PressScaleStyle())
                     }
                 }
                 .padding(4)
@@ -294,15 +301,85 @@ private struct PaceStep: View {
                 Spacer()
                 VStack(spacing: 14) {
                     Button { viewModel.next() } label: {
-                        HStack(spacing: 10) { Text("Start learning"); Text("→").font(.system(size: 15, design: .monospaced)) }
+                        HStack(spacing: 10) { Text("Continue"); Text("→").font(.system(size: 15, design: .monospaced)) }
                     }
                     .buttonStyle(PrimaryButtonStyle())
-                    StepDots(current: .pace)
+                    StepDots(index: 2)
                 }
             }
             .padding(24)
         }
         .foregroundStyle(AppColor.ink)
+    }
+}
+
+/// Вход необязателен: Google или Apple, либо пропуск. Без входа обучение работает полностью (ABOUT.md, раздел 18).
+private struct AccountStep: View {
+    let viewModel: OnboardingViewModel
+    @Environment(\.webAuthenticationSession) private var webAuthenticationSession
+
+    var body: some View {
+        VStack(spacing: 0) {
+            StepHeader(counter: "optional") { viewModel.back() }
+            StepTitle(
+                label: "[ save progress ]",
+                title: "Keep your words safe",
+                subtitle: "Sign in to back up your words and sync them between your devices. Learning works fully offline either way."
+            )
+            .padding(.top, 36)
+
+            VStack(alignment: .leading, spacing: 12) {
+                benefit("Backup of words, notes and progress")
+                benefit("Restore after reinstalling")
+                benefit("Same words on every device")
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 20).padding(.vertical, 18)
+            .glassCard(cornerRadius: 24)
+            .padding(.top, 28)
+
+            Spacer()
+
+            VStack(spacing: 12) {
+                GoogleSignInButton(isDisabled: viewModel.account.isWorking) { signInWithGoogle() }
+                if AccountConfiguration.appleSignInEnabled {
+                    AppleSignInButton(isDisabled: viewModel.account.isWorking) { result in
+                        if viewModel.account.completeAppleSignIn(result) { viewModel.next() }
+                    }
+                }
+                if let message = viewModel.account.errorMessage {
+                    Text(message)
+                        .font(.system(size: 13))
+                        .foregroundStyle(.red)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 6)
+                }
+                Button { viewModel.next() } label: {
+                    HStack(spacing: 10) { Text("Continue without account"); Text("→").font(.system(size: 15, design: .monospaced)) }
+                }
+                .buttonStyle(QuietButtonStyle())
+                Text("no password stored · you can sign in later in Settings")
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundStyle(AppColor.smoke)
+            }
+        }
+        .padding(24)
+        .foregroundStyle(AppColor.ink)
+    }
+
+    private func benefit(_ text: LocalizedStringKey) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
+            Text("+")
+                .font(.system(size: 15, weight: .medium, design: .monospaced))
+                .foregroundStyle(AppColor.accent)
+            Text(text).font(.system(size: 15))
+        }
+    }
+
+    private func signInWithGoogle() {
+        Task {
+            if await viewModel.account.signInWithGoogle(using: webAuthenticationSession) { viewModel.next() }
+        }
     }
 }
 

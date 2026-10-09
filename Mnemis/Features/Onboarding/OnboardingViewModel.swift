@@ -1,8 +1,10 @@
 import Foundation
 import Observation
 
+/// Сначала предлагаем вход, затем настройки для новых пользователей и тех, кто пропустил вход (ABOUT.md, раздел 37).
 enum OnboardingStep: Int, CaseIterable {
     case welcome
+    case account
     case level
     case pace
     case notifications
@@ -17,10 +19,13 @@ final class OnboardingViewModel {
     var remindersOn = true
     private(set) var errorMessage: String?
 
+    /// Вход необязателен: шаг можно пропустить кнопкой «Continue without account».
+    let account: AccountViewModel
     private let container: AppContainer
 
     init(container: AppContainer) {
         self.container = container
+        self.account = AccountViewModel(account: container.account)
         if let settings = try? container.settings.load() {
             level = settings.proficiencyLevel
             newWordsPerDay = settings.newWordsPerDay
@@ -32,7 +37,8 @@ final class OnboardingViewModel {
 
     func next() {
         switch step {
-        case .welcome: step = .level
+        case .welcome: step = .account
+        case .account: step = .level
         case .level: step = .pace
         case .pace:
             if remindersOn {

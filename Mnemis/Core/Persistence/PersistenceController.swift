@@ -6,13 +6,15 @@ import SwiftData
 /// Сохранение идёт через `save()`: прогресс и история повторений пишутся одной транзакцией.
 @MainActor
 final class PersistenceController {
-    static let models: [any PersistentModel.Type] = [
+    nonisolated static let models: [any PersistentModel.Type] = [
         WordEntity.self,
         ExampleSentenceEntity.self,
         WordProgressEntity.self,
         ReviewRecordEntity.self,
         DailyWordAssignmentEntity.self,
         UserSettingsEntity.self,
+        DailyActivityEntity.self,
+        PhraseEntity.self,
     ]
 
     let container: ModelContainer
@@ -27,6 +29,11 @@ final class PersistenceController {
     ///   - storeURL: файл хранилища. Если `nil`, используется стандартное расположение SwiftData.
     ///   - inMemory: хранилище в памяти, для тестов и превью.
     static func make(storeURL: URL? = nil, inMemory: Bool = false) throws -> PersistenceController {
+        PersistenceController(container: try makeModelContainer(storeURL: storeURL, inMemory: inMemory))
+    }
+
+    /// Создаёт `ModelContainer`. Не привязан к главному потоку: при запуске хранилище открывается в фоне.
+    nonisolated static func makeModelContainer(storeURL: URL? = nil, inMemory: Bool = false) throws -> ModelContainer {
         let schema = Schema(models)
         let configuration: ModelConfiguration
         if inMemory {
@@ -36,7 +43,7 @@ final class PersistenceController {
         } else {
             configuration = ModelConfiguration(schema: schema)
         }
-        return PersistenceController(container: try ModelContainer(for: schema, configurations: [configuration]))
+        return try ModelContainer(for: schema, configurations: [configuration])
     }
 
     func save() throws {

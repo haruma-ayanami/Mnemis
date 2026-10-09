@@ -7,6 +7,8 @@ Mnemis использует следующие данные. Тексты лиц
 |---|---|---|
 | [NGSL-GR 1.0](https://www.newgeneralservicelist.com/ngsl-graded-reader) (Browne, Culligan и др.) | список слов и ранг в `SeedData/words-en-ru.json` | CC BY-SA 4.0 |
 | [Wiktionary](https://www.wiktionary.org) через [kaikki.org](https://kaikki.org) (wiktextract) | определения, IPA, примеры и русские переводы | CC BY-SA |
+| [Русский Викисловарь](https://ru.wiktionary.org) через [kaikki.org/ruwiktionary](https://kaikki.org/ruwiktionary/) | русские толкования английских слов по частям речи (где есть в кэше сборки) | CC BY-SA |
+| [Wiktionary](https://www.wiktionary.org) через [kaikki.org](https://kaikki.org), запрос из приложения | значение, перевод и пример идиомы при добавлении | CC BY-SA |
 | [Free Dictionary API](https://dictionaryapi.dev) | необязательное дополнение слов по сети | условия данных не опубликованы, проверить перед релизом |
 
 Цитирование wiktextract: Tatu Ylonen, *Wiktextract: Wiktionary as Machine-Readable Structured Data*, LREC 2022, pp. 1317–1325.

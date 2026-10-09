@@ -19,6 +19,8 @@ struct WeekDay: Identifiable, Equatable {
 final class TodayViewModel {
     private(set) var dailyWord: Word?
     private(set) var dailyExample: String?
+    /// Фраза дня из личного списка идиом и предложений; nil, если список пуст или фразы выключены в Settings.
+    private(set) var phrase: Phrase?
     private(set) var dueCount = 0
     private(set) var newStarted = 0
     private(set) var newLimit = 5
@@ -48,27 +50,23 @@ final class TodayViewModel {
             dailyWord = try container.dailyWordUseCase.todaysWord(preferredLevel: settings.proficiencyLevel.rawValue)
 
             dailyExample = try dailyWord.flatMap { try container.words.examples(forWordID: $0.id).first?.sentence }
+            phrase = settings.phrasesInToday
+                ? try container.phrases.phraseOfDay(dayID: LocalDay.id(for: now, calendar: calendar))
+                : nil
 
-            let words = try container.words.allWords()
-            let progress = try container.progress.all()
-            totalWords = words.filter { $0.origin != .api }.count
-            rememberedCount = progress.filter { $0.status == .remembered || $0.status == .known }.count
-            dueCount = ReviewScheduler.dueProgress(progress, at: now).count
-            nextReviewDate = ReviewScheduler.nextReviewDate(in: progress, after: now)
+            // Все числа здесь — счётчики и одна дата из базы: прогресс целиком не читаем.
+            totalWords = try container.words.countOwnAndBuiltIn()
+            rememberedCount = try container.progress.countMastered()
+            dueCount = try container.progress.countDue(at: now)
+            nextReviewDate = try container.progress.nextReviewDate(after: now)
             newLimit = settings.newWordsPerDay
-            newStarted = LearningSession.startedToday(progress: progress, now: now, calendar: calendar)
-            cardCount = LearningSession.queue(
-                words: words,
-                progress: progress,
-                dailyWordID: dailyWord?.id,
-                newWordsPerDay: settings.newWordsPerDay,
-                startedToday: newStarted,
-                now: now
-            ).count
+            newStarted = try container.progress.countIntroduced(since: LocalDay.start(of: now, calendar: calendar))
+            cardCount = try container.studyQueue.cardCount(newWordsPerDay: settings.newWordsPerDay, now: now)
 
-            let reviewDates = try container.reviews.all().map(\.reviewedAt)
-            streak = StreakCalculator.currentStreak(reviewDates: reviewDates, now: now, calendar: calendar)
-            week = Self.makeWeek(reviewDates: reviewDates, now: now, calendar: calendar)
+            // Серия и неделя считаются по сводке за дни, а не по всей истории.
+            let activeDays = try container.dailyActivity.all().map(\.dayStart)
+            streak = StreakCalculator.currentStreak(reviewDates: activeDays, now: now, calendar: calendar)
+            week = Self.makeWeek(reviewDates: activeDays, now: now, calendar: calendar)
             state = .loaded
         } catch {
             state = .failed(error.localizedDescription)
@@ -76,7 +74,7 @@ final class TodayViewModel {
     }
 
     func openLearn() {
-        container.router.selectedTab = .learn
+        container.router.startSession()
     }
 
     /// Неделя с понедельника: сделано, сегодня, пропущено, впереди.

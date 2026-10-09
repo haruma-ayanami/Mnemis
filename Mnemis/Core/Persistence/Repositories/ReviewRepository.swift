@@ -10,6 +10,10 @@ struct ReviewRepository {
         try context.fetch(FetchDescriptor<ReviewRecordEntity>()).map(\.domain)
     }
 
+    func count() throws -> Int {
+        try context.fetchCount(FetchDescriptor<ReviewRecordEntity>())
+    }
+
     func append(_ record: ReviewRecord) {
         context.insert(ReviewRecordEntity(record))
     }

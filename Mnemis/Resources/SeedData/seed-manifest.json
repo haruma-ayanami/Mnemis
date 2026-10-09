@@ -1,8 +1,9 @@
 {
+  "seedVersion": 3,
   "sources": [
     {
       "id": "ngsl-wiktionary",
-      "name": "NGSL-GR word list + Wiktionary (via kaikki.org)",
+      "name": "NGSL-GR word list + Wiktionary EN/RU (via kaikki.org)",
       "url": "https://kaikki.org",
       "licenseID": "cc-by-sa"
     },
@@ -17,7 +18,7 @@
     {
       "id": "cc-by-sa",
       "name": "CC BY-SA 4.0 / CC BY-SA 3.0",
-      "text": "Word list: NGSL-GR 1.0 by Browne, Culligan et al. (newgeneralservicelist.com), CC BY-SA 4.0. Definitions, pronunciations, examples and translations come from Wiktionary (CC BY-SA), extracted by wiktextract: Tatu Ylonen, Wiktextract: Wiktionary as Machine-Readable Structured Data, LREC 2022, via kaikki.org. Derived data is shared under the same license."
+      "text": "Word list: NGSL-GR 1.0 by Browne, Culligan et al. (newgeneralservicelist.com), CC BY-SA 4.0. Definitions, pronunciations, examples and translations come from the English and Russian Wiktionary (CC BY-SA), extracted by wiktextract: Tatu Ylonen, Wiktextract: Wiktionary as Machine-Readable Structured Data, LREC 2022, via kaikki.org. Idiom meanings are looked up in the English Wiktionary the same way. Derived data is shared under the same license."
     },
     {
       "id": "dictionaryapi-dev",

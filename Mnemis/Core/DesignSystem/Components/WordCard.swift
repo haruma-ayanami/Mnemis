@@ -24,11 +24,7 @@ struct WordCard: View {
 
             AsciiDivider()
 
-            if !word.translation.isEmpty {
-                Text(word.translation)
-                    .font(.system(size: 19, weight: .medium))
-                    .foregroundStyle(AppColor.ink)
-            }
+            MeaningsList(meanings: word.allMeanings)
             if let example {
                 Text(highlighted(example))
                     .font(.system(size: 15))
@@ -44,7 +40,7 @@ struct WordCard: View {
     }
 
     private var subtitle: String {
-        [word.ipa, word.partOfSpeech, word.level].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
+        [word.ipa, word.partsOfSpeechLabel, word.level].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " · ")
     }
 
     /// Подсвечивает слово зелёным внутри примера.
@@ -54,5 +50,38 @@ struct WordCard: View {
             text[range].foregroundColor = AppColor.accent
         }
         return text
+    }
+}
+
+/// Значения по частям речи: первое крупно, остальные мельче, с короткой зелёной меткой `v`, `n`, `adj`.
+/// У слова с одной частью речи метки нет: она уже есть в подписи под словом.
+struct MeaningsList: View {
+    let meanings: [WordMeaning]
+    var primarySize: CGFloat = 19
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ForEach(Array(meanings.enumerated()), id: \.offset) { index, meaning in
+                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    if meanings.count > 1 {
+                        Text(meaning.shortPartOfSpeech)
+                            .font(.system(size: 12, design: .monospaced))
+                            .foregroundStyle(AppColor.accent)
+                            .frame(width: 28, alignment: .leading)
+                    }
+                    Text(meaning.translation)
+                        .font(.system(size: index == 0 ? primarySize : primarySize - 4, weight: index == 0 ? .medium : .regular))
+                        .foregroundStyle(index == 0 ? AppColor.ink : AppColor.ash)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+    }
+}
+
+extension Word {
+    /// Части речи для подписи: `noun` или `v · n`, если значений несколько.
+    var partsOfSpeechLabel: String? {
+        meanings.count > 1 ? meanings.map(\.shortPartOfSpeech).joined(separator: " / ") : partOfSpeech
     }
 }

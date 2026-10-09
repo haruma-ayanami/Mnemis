@@ -20,7 +20,12 @@ struct APIClient: Sendable {
     }
 
     func data(from url: URL) async throws -> Data {
-        var request = URLRequest(url: url)
+        try await send(URLRequest(url: url))
+    }
+
+    /// Выполняет любой запрос (GET или POST) с общим таймаутом и проверкой статуса.
+    func send(_ request: URLRequest) async throws -> Data {
+        var request = request
         request.timeoutInterval = timeout
 
         do {

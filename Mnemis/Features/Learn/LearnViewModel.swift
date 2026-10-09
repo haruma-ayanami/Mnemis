@@ -31,6 +31,9 @@ final class LearnViewModel {
     var reviewedCount: Int { results.count }
     var correctCount: Int { results.filter(\.isCorrect).count }
     var isSessionFinished: Bool { reviewedCount > 0 && queue.isEmpty }
+    /// Сколько повторений осталось в очереди: у них есть прогресс, у новых слов его нет.
+    var remainingReviewCount: Int { queue.filter { progressByWord[$0.id] != nil }.count }
+    var remainingNewCount: Int { queue.count - remainingReviewCount }
 
     var accuracyPercent: Int {
         results.isEmpty ? 0 : Int((Double(correctCount) / Double(results.count) * 100).rounded())
@@ -42,10 +45,24 @@ final class LearnViewModel {
         return String(format: "%d:%02d", seconds / 60, seconds % 60)
     }
 
-    /// Запускает сессию один раз. Возврат на вкладку не сбрасывает прогресс сессии.
+    /// Запускает сессию один раз. Возврат на вкладку не сбрасывает прогресс сессии,
+    /// но слова в очереди перечитываются: правка перевода в Words сразу видна в сессии.
     func startIfNeeded() {
-        guard !hasStarted else { return }
+        guard !hasStarted else {
+            refreshQueuedWords()
+            return
+        }
         start()
+    }
+
+    /// Обновляет слова очереди из базы, сохраняя порядок. Удалённые слова выпадают из очереди.
+    func refreshQueuedWords() {
+        guard !queue.isEmpty, let fresh = try? container.words.words(ids: queue.map(\.id)) else { return }
+        let byID = Dictionary(fresh.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let updated = queue.compactMap { byID[$0.id] }
+        guard updated != queue else { return }
+        queue = updated
+        loadCurrentDetails()
     }
 
     func restart() {
@@ -106,27 +123,24 @@ final class LearnViewModel {
             let calendar = container.clock.calendar
             let now = container.clock.now
 
-            let words = try container.words.allWords()
-            let progress = try container.progress.all()
-            progressByWord = Dictionary(progress.map { ($0.wordID, $0) }, uniquingKeysWith: { first, _ in first })
             let dayID = LocalDay.id(for: now, calendar: calendar)
             let dailyWordID = try container.dailyWords.assignment(forDay: dayID)?.wordID
-            let startedToday = LearningSession.startedToday(progress: progress, now: now, calendar: calendar)
 
-            queue = LearningSession.queue(
-                words: words,
-                progress: progress,
-                dailyWordID: dailyWordID,
+            let snapshot = try container.studyQueue.snapshot(
                 newWordsPerDay: settings.newWordsPerDay + extraNewWords,
-                startedToday: startedToday,
+                dailyWordID: dailyWordID,
                 now: now
             )
+            // В снимке — только повторения, которые сейчас пора сделать.
+            let dueProgress = snapshot.progress
+            progressByWord = Dictionary(dueProgress.map { ($0.wordID, $0) }, uniquingKeysWith: { first, _ in first })
+            queue = snapshot.queue
             totalCount = queue.count
-            let dueIDs = Set(ReviewScheduler.dueProgress(progress, at: now).map(\.wordID))
+            let dueIDs = Set(dueProgress.map(\.wordID))
             reviewCount = queue.filter { dueIDs.contains($0.id) }.count
             newCount = queue.count - reviewCount
-            nextReviewDate = ReviewScheduler.nextReviewDate(in: progress, after: now)
-            dueSoonCount = progress.filter { ($0.nextReviewAt ?? .distantFuture) > now && ($0.nextReviewAt ?? .distantFuture) < now.addingTimeInterval(86_400) }.count
+            nextReviewDate = try container.progress.nextReviewDate(after: now)
+            dueSoonCount = try container.progress.countScheduled(after: now, before: now.addingTimeInterval(86_400))
             startedAt = now
             loadCurrentDetails()
             state = .loaded

@@ -120,7 +120,7 @@ struct NotificationSettingsView: View {
                             .background(on ? AppColor.fill : .clear, in: .circle)
                             .overlay(Circle().stroke(on ? .clear : AppColor.hairline))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(PressScaleStyle())
                     .frame(maxWidth: .infinity)
                     .accessibilityLabel(Text(LocalizedStringKey(weekdayNames[index])))
                     .accessibilityAddTraits(on ? [.isSelected] : [])
@@ -146,7 +146,7 @@ struct NotificationSettingsView: View {
                                 .frame(width: 40, height: 30)
                                 .background(on ? AppColor.hairline : .clear, in: .capsule)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(PressScaleStyle())
                         .accessibilityAddTraits(on ? [.isSelected] : [])
                     }
                 }

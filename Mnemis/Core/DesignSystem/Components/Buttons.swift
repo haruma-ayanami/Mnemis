@@ -1,5 +1,16 @@
 import SwiftUI
 
+/// Мгновенный отклик на нажатие: кнопка чуть уменьшается сразу, без ожидания завершения действия.
+struct PressScaleStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.965 : 1)
+            .opacity(configuration.isPressed ? 0.85 : 1)
+            .animation(.easeOut(duration: 0.09), value: configuration.isPressed)
+            .contentShape(Rectangle())
+    }
+}
+
 /// Основная кнопка: плотная заливка цветом текста, инвертированный текст.
 struct PrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
@@ -8,7 +19,9 @@ struct PrimaryButtonStyle: ButtonStyle {
             .foregroundStyle(AppColor.onPrimary)
             .frame(maxWidth: .infinity, minHeight: 56)
             .background(AppColor.primary, in: .capsule)
-            .opacity(configuration.isPressed ? 0.85 : 1)
+            .scaleEffect(configuration.isPressed ? 0.975 : 1)
+            .animation(.easeOut(duration: 0.09), value: configuration.isPressed)
+            .contentShape(Rectangle())
     }
 }
 
@@ -22,7 +35,9 @@ struct GlassButtonStyle: ButtonStyle {
             .foregroundStyle(AppColor.ink)
             .frame(maxWidth: .infinity, minHeight: height)
             .glassCapsule()
-            .opacity(configuration.isPressed ? 0.8 : 1)
+            .scaleEffect(configuration.isPressed ? 0.975 : 1)
+            .animation(.easeOut(duration: 0.09), value: configuration.isPressed)
+            .contentShape(Rectangle())
     }
 }
 
@@ -34,6 +49,8 @@ struct QuietButtonStyle: ButtonStyle {
             .foregroundStyle(AppColor.ash)
             .frame(maxWidth: .infinity, minHeight: 44)
             .opacity(configuration.isPressed ? 0.6 : 1)
+            .animation(.easeOut(duration: 0.09), value: configuration.isPressed)
+            .contentShape(Rectangle())
     }
 }
 
@@ -52,7 +69,7 @@ struct RoundGlassButton: View {
                 .frame(width: size, height: size)
                 .glassCircle()
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressScaleStyle())
         .accessibilityLabel(Text(label))
     }
 }

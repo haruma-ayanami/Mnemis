@@ -3,6 +3,7 @@ import SwiftUI
 /// Статистика (ABOUT.md, раздел 15): простые и полезные числа, а не декоративные графики.
 struct StatisticsView: View {
     @State private var viewModel: StatisticsViewModel
+    @Namespace private var pill
 
     init(container: AppContainer) {
         _viewModel = State(initialValue: StatisticsViewModel(container: container))
@@ -27,15 +28,17 @@ struct StatisticsView: View {
                     .padding(.top, 8)
 
                 periodPicker
-                headline
-                heatmap
+                headline.screenEntrance(delay: 0.04)
+                heatmap.screenEntrance(delay: 0.08)
 
                 HStack(spacing: 10) {
                     StatTile(title: "streak · longest", text: "\(viewModel.currentStreak)", secondary: " / \(viewModel.longestStreak)")
                     StatTile(title: "reviews", text: viewModel.reviewCount.formatted())
+                    StatTile(title: "level", text: viewModel.cefrLevel.rawValue, secondary: " · \(viewModel.cefrPercent)%")
                 }
+                .screenEntrance(delay: 0.12)
 
-                distribution
+                distribution.screenEntrance(delay: 0.16)
             }
             .padding(.horizontal, 20)
             .padding(.bottom, 24)
@@ -46,14 +49,18 @@ struct StatisticsView: View {
     private var periodPicker: some View {
         HStack(spacing: 4) {
             ForEach(StatsPeriod.allCases) { period in
-                Button { viewModel.period = period } label: {
+                Button { withAnimation(Motion.swap) { viewModel.period = period } } label: {
                     Text(period.rawValue)
                         .font(.system(size: 14, weight: .medium, design: .monospaced))
                         .frame(maxWidth: .infinity, minHeight: 36)
                         .foregroundStyle(viewModel.period == period ? AppColor.ink : AppColor.ash)
-                        .background(viewModel.period == period ? AppColor.hairline : .clear, in: .capsule)
+                        .background {
+                            if viewModel.period == period {
+                                Capsule().fill(AppColor.hairline).matchedGeometryEffect(id: "period-pill", in: pill)
+                            }
+                        }
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(PressScaleStyle())
                 .accessibilityAddTraits(viewModel.period == period ? [.isSelected] : [])
             }
         }

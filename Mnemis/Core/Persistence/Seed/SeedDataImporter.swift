@@ -22,6 +22,7 @@ struct SeedDataImporter {
                 lemma: item.lemma,
                 translation: item.translation,
                 partOfSpeech: item.partOfSpeech,
+                meanings: item.meanings ?? [],
                 definition: item.definition,
                 ipa: item.ipa,
                 level: item.level,
@@ -50,5 +51,53 @@ struct SeedDataImporter {
 
         try persistence.save()
         return added
+    }
+
+    /// Итог обновления встроенного словаря.
+    struct RefreshResult: Equatable {
+        var updated = 0
+        var added = 0
+        var removed = 0
+    }
+
+    /// Обновляет встроенные слова до новой версии словаря.
+    ///
+    /// - Слово, которое пользователь не правил, получает новые переводы, значения по частям речи и определение.
+    ///   Правленое слово (`updatedAt` позже `createdAt`) не трогаем.
+    /// - Новые слова добавляются, как при обычном импорте.
+    /// - Встроенное слово, которого больше нет в словаре, удаляется, только если его ещё не начинали учить.
+    @discardableResult
+    func refresh(_ seed: SeedWords, manifest: SeedManifest, startedWordIDs: Set<UUID>, now: Date) throws -> RefreshResult {
+        var result = RefreshResult()
+        let items = Dictionary(seed.words.map { (TextNormalizer.normalize($0.lemma), $0) }, uniquingKeysWith: { first, _ in first })
+
+        let existing = try words.updateBuiltIn(sourceID: seed.sourceID) { word in
+            guard let item = items[word.normalizedLemma] else {
+                guard !startedWordIDs.contains(word.id) else { return .keep }
+                result.removed += 1
+                return .delete
+            }
+            guard word.updatedAt <= word.createdAt else { return .keep }
+
+            var updated = word
+            updated.translation = item.translation
+            updated.partOfSpeech = item.partOfSpeech
+            updated.meanings = item.meanings ?? []
+            updated.definition = item.definition ?? word.definition
+            updated.ipa = item.ipa ?? word.ipa
+            updated.level = item.level ?? word.level
+            updated.frequencyRank = item.frequencyRank ?? word.frequencyRank
+            guard updated != word else { return .keep }
+            result.updated += 1
+            return .update(updated)
+        }
+        let seen = existing
+
+        let missing = SeedWords(sourceID: seed.sourceID, version: seed.version, words: seed.words.filter {
+            !seen.contains(TextNormalizer.normalize($0.lemma))
+        })
+        result.added = try importWords(missing, manifest: manifest, now: now)
+        try persistence.save()
+        return result
     }
 }

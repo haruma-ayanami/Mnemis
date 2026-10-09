@@ -3,6 +3,8 @@ import Foundation
 /// Формат `SeedData/words-en-ru.json`: встроенный словарь, отдельно от Swift-кода.
 struct SeedWords: Decodable, Sendable {
     let sourceID: String
+    /// Версия данных. Когда она растёт, встроенные слова у уже установленного приложения обновляются.
+    let version: Int?
     let words: [SeedWord]
 }
 
@@ -10,6 +12,8 @@ struct SeedWord: Decodable, Sendable {
     let lemma: String
     let translation: String
     let partOfSpeech: String?
+    /// Значения по частям речи, если их несколько.
+    let meanings: [WordMeaning]?
     let definition: String?
     let ipa: String?
     let level: String?
@@ -32,6 +36,8 @@ struct SeedManifest: Decodable, Sendable {
         let text: String
     }
 
+    /// Версия встроенного словаря (`words-en-ru.json`). Читается без разбора всего словаря.
+    let seedVersion: Int?
     let sources: [Source]
     let licenses: [License]
 
@@ -58,6 +64,11 @@ enum SeedBundle {
             words: try JSONDecoder().decode(SeedWords.self, from: wordsData),
             manifest: try JSONDecoder().decode(SeedManifest.self, from: manifestData)
         )
+    }
+
+    /// Только манифест: экран настроек не должен разбирать весь словарь ради списка источников.
+    static func loadManifest(bundle: Bundle = .main) throws -> SeedManifest {
+        try JSONDecoder().decode(SeedManifest.self, from: data(named: "seed-manifest", bundle: bundle))
     }
 
     /// Ресурс может лежать в подпапке `SeedData` или в корне бандла, поэтому ищем в обоих местах.

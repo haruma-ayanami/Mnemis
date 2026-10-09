@@ -12,6 +12,7 @@ extension WordEntity {
         translationLanguage = word.translationLanguage
         translation = word.translation
         partOfSpeech = word.partOfSpeech
+        meaningsJSON = Self.encode(word.meanings)
         definition = word.definition
         ipa = word.ipa
         audioURL = word.audioURL
@@ -23,16 +24,22 @@ extension WordEntity {
         userNote = word.userNote
         createdAt = word.createdAt
         updatedAt = word.updatedAt
+        isAPIOrigin = word.origin == .api
+        sortRank = word.frequencyRank ?? Int.max
+        searchText = ([word.translation] + word.meanings.map(\.translation) + [word.definition ?? "", word.userNote ?? ""])
+            .joined(separator: "\n")
+            .lowercased()
     }
 
     var domain: Word {
-        Word(
+        var word = Word(
             id: id,
             lemma: lemma,
             learningLanguage: learningLanguage,
             translationLanguage: translationLanguage,
             translation: translation,
             partOfSpeech: partOfSpeech,
+            meanings: Self.decode(meaningsJSON),
             definition: definition,
             ipa: ipa,
             audioURL: audioURL,
@@ -44,6 +51,18 @@ extension WordEntity {
             userNote: userNote,
             createdAt: createdAt
         )
+        word.updatedAt = updatedAt
+        return word
+    }
+
+    private static func encode(_ meanings: [WordMeaning]) -> String {
+        guard !meanings.isEmpty, let data = try? JSONEncoder().encode(meanings) else { return "" }
+        return String(decoding: data, as: UTF8.self)
+    }
+
+    private static func decode(_ json: String) -> [WordMeaning] {
+        guard !json.isEmpty else { return [] }
+        return (try? JSONDecoder().decode([WordMeaning].self, from: Data(json.utf8))) ?? []
     }
 }
 
@@ -57,6 +76,7 @@ extension ExampleSentenceEntity {
         licenseID = example.licenseID
         isUserCreated = example.isUserCreated
         createdAt = example.createdAt
+        searchText = example.sentence.lowercased()
     }
 
     var domain: ExampleSentence {
@@ -90,6 +110,11 @@ extension WordProgressEntity {
         suspendedFromStatus = progress.suspendedFromStatus
         createdAt = progress.createdAt
         updatedAt = progress.updatedAt
+        statusRaw = progress.status.rawValue
+        isSchedulable = LearningRules.isSchedulable(progress.status)
+        isMastered = progress.status == .remembered || progress.status == .known
+        dueAt = progress.nextReviewAt ?? Date.distantFuture
+        introducedSortKey = progress.introducedAt ?? Date.distantPast
     }
 
     var domain: WordProgress {
@@ -171,6 +196,7 @@ extension UserSettingsEntity {
         maxNotificationsPerDay = settings.maxNotificationsPerDay
         preferredTheme = settings.preferredTheme
         soundEnabled = settings.soundEnabled
+        phrasesInToday = settings.phrasesInToday
         onboardingCompleted = settings.onboardingCompleted
     }
 
@@ -189,6 +215,7 @@ extension UserSettingsEntity {
             maxNotificationsPerDay: maxNotificationsPerDay,
             preferredTheme: preferredTheme,
             soundEnabled: soundEnabled,
+            phrasesInToday: phrasesInToday,
             onboardingCompleted: onboardingCompleted
         )
     }

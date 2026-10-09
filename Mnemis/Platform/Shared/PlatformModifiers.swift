@@ -1,52 +1,39 @@
 import SwiftUI
 
-// Платформенные различия живут здесь, а не в экранах (ARCHITECTURE.md, раздел 12).
+// Модификаторы iPhone (iOS 27+). Платформенные различия живут здесь, а не в экранах (ARCHITECTURE.md, раздел 12).
+
+enum MnemisFeedback {
+    case selection
+    case light
+    case success
+}
 
 extension View {
-    /// Отключает автозаглавные буквы в полях ввода слов. На macOS модификатора нет, поэтому ничего не делаем.
+    /// Тактильный отклик при изменении значения.
+    func mnemisHaptic<T: Equatable>(_ feedback: MnemisFeedback, trigger: T) -> some View {
+        modifier(HapticModifier(feedback: feedback, trigger: trigger))
+    }
+
+    /// Отключает автозаглавные буквы в полях ввода слов.
     func mnemisNoAutocapitalization() -> some View {
-        modifier(NoAutocapitalizationModifier())
+        textInputAutocapitalization(.never)
     }
 
-    /// Скрывает системную панель навигации: заголовки рисуем сами. На macOS её нет.
+    /// Скрывает системную панель навигации: заголовки рисуем сами.
     func mnemisNavigationBarHidden() -> some View {
-        modifier(NavigationBarHiddenModifier())
-    }
-
-    /// Скрывает панель вкладок в режиме фокуса (сессия обучения). На macOS панели вкладок нет.
-    func mnemisTabBarHidden(_ hidden: Bool) -> some View {
-        modifier(TabBarVisibilityModifier(hidden: hidden))
+        toolbar(.hidden, for: .navigationBar)
     }
 }
 
-private struct NoAutocapitalizationModifier: ViewModifier {
-    func body(content: Content) -> some View {
-        #if os(iOS)
-        content.textInputAutocapitalization(.never)
-        #else
-        content
-        #endif
-    }
-}
-
-private struct TabBarVisibilityModifier: ViewModifier {
-    let hidden: Bool
+private struct HapticModifier<T: Equatable>: ViewModifier {
+    let feedback: MnemisFeedback
+    let trigger: T
 
     func body(content: Content) -> some View {
-        #if os(iOS)
-        content.toolbar(hidden ? .hidden : .automatic, for: .tabBar)
-        #else
-        content
-        #endif
-    }
-}
-
-private struct NavigationBarHiddenModifier: ViewModifier {
-    func body(content: Content) -> some View {
-        #if os(iOS)
-        content.toolbar(.hidden, for: .navigationBar)
-        #else
-        content
-        #endif
+        switch feedback {
+        case .selection: content.sensoryFeedback(.selection, trigger: trigger)
+        case .light: content.sensoryFeedback(.impact(weight: .light), trigger: trigger)
+        case .success: content.sensoryFeedback(.success, trigger: trigger)
+        }
     }
 }
