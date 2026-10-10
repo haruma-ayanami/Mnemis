@@ -230,7 +230,7 @@ private struct RatingGlass: ViewModifier {
     let isEasy: Bool
 
     func body(content: Content) -> some View {
-        if isEasy { content } else { content.glassEffect(.regular, in: .rect(cornerRadius: 24)) }
+        if isEasy { content } else { content.glassCard(cornerRadius: 24) }
     }
 }
 

@@ -27,11 +27,11 @@ struct DailyCardTabs: View {
                 Button { withAnimation(Motion.swap) { selection = tab } } label: {
                     Text(tab.title)
                         .font(.system(size: 13, weight: .medium, design: .monospaced))
-                        .foregroundStyle(selected ? AppColor.onPrimary : AppColor.ash)
+                        .foregroundStyle(selected ? AppColor.ink : AppColor.ash)
                         .padding(.horizontal, 14).frame(minHeight: 32)
                         .background {
                             if selected {
-                                Capsule().fill(AppColor.primary).matchedGeometryEffect(id: "daily-pill", in: pill)
+                                Capsule().fill(AppColor.glassLine).matchedGeometryEffect(id: "daily-pill", in: pill)
                             }
                         }
                 }
@@ -40,7 +40,7 @@ struct DailyCardTabs: View {
             }
         }
         .padding(3)
-        .glassCapsule()
+        .background(AppColor.track, in: .capsule)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

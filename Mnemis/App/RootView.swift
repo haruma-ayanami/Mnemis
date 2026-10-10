@@ -28,24 +28,31 @@ struct RootView: View {
         Group {
             if router.isOnboarded {
                 TabView(selection: tabSelection) {
-                    Tab("Today", systemImage: "sun.max", value: AppTab.today) {
-                        TodayView(container: container)
-                    }
-                    Tab("Learn", systemImage: "rectangle.stack", value: AppTab.learn) {
-                        LearnView(container: container)
-                    }
-                    Tab("Words", systemImage: "character.book.closed", value: AppTab.words) {
-                        WordsView(container: container)
-                    }
-                    Tab("Statistics", systemImage: "chart.bar", value: AppTab.statistics) {
-                        StatisticsView(container: container)
-                    }
-                    Tab("Settings", systemImage: "gearshape", value: AppTab.settings) {
-                        SettingsView(container: container)
-                    }
+                    TodayView(container: container)
+                        .toolbarVisibility(.hidden, for: .tabBar)
+                        .tag(AppTab.today)
+                    LearnView(container: container)
+                        .toolbarVisibility(.hidden, for: .tabBar)
+                        .tag(AppTab.learn)
+                    WordsView(container: container)
+                        .toolbarVisibility(.hidden, for: .tabBar)
+                        .tag(AppTab.words)
+                    StatisticsView(container: container)
+                        .toolbarVisibility(.hidden, for: .tabBar)
+                        .tag(AppTab.statistics)
+                    SettingsView(container: container)
+                        .toolbarVisibility(.hidden, for: .tabBar)
+                        .tag(AppTab.settings)
                 }
-                // При прокрутке вниз панель сжимается до текущей вкладки, при прокрутке вверх раскрывается.
-                .tabBarMinimizeBehavior(.onScrollDown)
+                // Системная панель скрыта: вместо неё панель из холста — стекло, пять пунктов, активный серый.
+                // Содержимое поднимается над панелью; сама панель стоит на 22 pt от края экрана, как в холсте.
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    Color.clear.frame(height: 74)
+                }
+                .overlay(alignment: .bottom) {
+                    MnemisTabBar(selection: tabSelection)
+                        .ignoresSafeArea(edges: .bottom)
+                }
             } else {
                 OnboardingView(container: container)
             }

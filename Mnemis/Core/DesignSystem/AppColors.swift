@@ -21,6 +21,21 @@ enum AppColor {
     static let onPrimary = Color(light: 0xF6F6F2, dark: 0x0A0A0B)
 
     static let hairline = Color.primary.opacity(0.10)
+
+    // Стекло из холста: градиент сверху вниз, блик слева вверху, тонкая граница.
+    static let glassTop = Color.dynamic(light: (0xFFFFFF, 0.82), dark: (0xFFFFFF, 0.10))
+    static let glassBottom = Color.dynamic(light: (0xFFFFFF, 0.50), dark: (0xFFFFFF, 0.035))
+    static let glassSpec = Color.dynamic(light: (0xFFFFFF, 0.95), dark: (0xFFFFFF, 0.09))
+    static let glassLine = Color.dynamic(light: (0x000000, 0.09), dark: (0xFFFFFF, 0.13))
+    static let glassHighlight = Color.dynamic(light: (0xFFFFFF, 1), dark: (0xFFFFFF, 0.22))
+    static let glassShadow = Color.dynamic(light: (0x183020, 0.10), dark: (0x000000, 0.50))
+    /// Активный сегмент на серой дорожке (`--line2` в тёмной теме, белый в светлой).
+    static let segmentActive = Color.dynamic(light: (0xFFFFFF, 1), dark: (0xFFFFFF, 0.13))
+    /// Фон дорожек сегментов и тумблеров (`--line`).
+    static let track = Color.dynamic(light: (0x000000, 0.07), dark: (0xFFFFFF, 0.07))
+    /// Ореол за сферой и сетка пола (`--halo`, `--mesh`).
+    static let halo = Color.dynamic(light: (0x34C873, 0.16), dark: (0x4CE38A, 0.16))
+    static let mesh = Color.dynamic(light: (0x000000, 0.10), dark: (0xFFFFFF, 0.12))
     static let toggleOff = Color(light: 0xD6D6D0, dark: 0x3A3A3C)
 
     // Шкала памяти: чем лучше слово запомнено, тем контрастнее точка.

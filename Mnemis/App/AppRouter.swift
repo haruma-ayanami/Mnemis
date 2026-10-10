@@ -1,11 +1,13 @@
 import SwiftUI
 
-enum AppTab: Hashable, CaseIterable {
+enum AppTab: Hashable, CaseIterable, Identifiable {
     case today
     case learn
     case words
     case statistics
     case settings
+
+    var id: Self { self }
 }
 
 /// Состояние навигации верхнего уровня: какая вкладка открыта и показан ли онбординг.

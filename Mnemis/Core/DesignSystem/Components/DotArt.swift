@@ -1,112 +1,79 @@
 import SwiftUI
 
-/// Сфера из точек: зелёный сверху переходит в белый и серый снизу. Символ словаря пользователя.
-/// Рисуется один раз, детерминированно, без анимации (Reduce Motion не нужен).
-/// Геометрия не зависит от размера view: считается один раз на количество точек.
-/// Точки группируются по цвету и прозрачности, поэтому на кадр уходят десятки заливок, а не тысячи.
+/// Сфера из точек по формуле холста (`.sphere`): сетка точек шагом 6 pt, цвет — вертикальный градиент
+/// от зелёного сверху к серому снизу, яркость затухает к центру и к краю. Тема меняет оттенки.
 struct DotSphere: View {
-    var dotCount = 2600
+    /// Раньше задавало число точек; сетка теперь строится по размеру. Параметр оставлен для вызовов.
+    var dotCount: Int = 0
+    @Environment(\.colorScheme) private var scheme
+
+    private static let step: CGFloat = 6
+    private static let dotRadius: CGFloat = 1.35
 
     var body: some View {
         Canvas { context, size in
-            let radius = min(size.width, size.height) / 2
+            let stops = scheme == .dark ? DotSphere.darkStops : DotSphere.lightStops
             let center = CGPoint(x: size.width / 2, y: size.height / 2)
-
-            var groups: [Int: Path] = [:]
-            for dot in DotSphereGeometry.dots(count: dotCount) {
-                let x = center.x + dot.x * radius
-                let y = center.y - dot.y * radius
-                let d = dot.diameter
-                groups[dot.group, default: Path()].addEllipse(in: CGRect(x: x - d / 2, y: y - d / 2, width: d, height: d))
-            }
-            for (group, path) in groups {
-                let shade = DotSphereGeometry.shade(for: group)
-                context.fill(path, with: .color(shade.color.opacity(shade.alpha)))
+            // Расстояние до дальнего угла: от него холст считает проценты радиального градиента.
+            let far = hypot(size.width / 2, size.height / 2)
+            var y = DotSphere.step / 2
+            while y < size.height {
+                var x = DotSphere.step / 2
+                while x < size.width {
+                    let fade = DotSphere.edgeAlpha(hypot(x - center.x, y - center.y) / far)
+                    if fade > 0.01 {
+                        let color = DotSphere.color(at: y / size.height, stops: stops)
+                        let r = DotSphere.dotRadius
+                        context.fill(
+                            Path(ellipseIn: CGRect(x: x - r, y: y - r, width: 2 * r, height: 2 * r)),
+                            with: .color(color.opacity(fade))
+                        )
+                    }
+                    x += DotSphere.step
+                }
+                y += DotSphere.step
             }
         }
-        .drawingGroup()
         .accessibilityHidden(true)
     }
-}
 
-/// Геометрия сферы из точек: спираль Фибоначчи с наклоном оси ~20°. Кэшируется по количеству точек.
-enum DotSphereGeometry {
-    struct Dot {
-        /// Координаты в долях радиуса, от -1 до 1. `y` растёт вверх.
-        let x: Double
-        let y: Double
-        let diameter: Double
-        /// Группа заливки: цвет и прозрачность. Одинаковые группы рисуются одним путём.
-        let group: Int
+    /// Вторая маска холста: 0.22 в центре, 0.45 при 45 %, 1 при 64 %, 0 при 71 % от дальнего угла.
+    static func edgeAlpha(_ t: CGFloat) -> CGFloat {
+        if t < 0.45 { return 0.22 + 0.23 * t / 0.45 }
+        if t < 0.64 { return 0.45 + 0.55 * (t - 0.45) / 0.19 }
+        if t < 0.71 { return 1 - (t - 0.64) / 0.07 }
+        return 0
     }
 
-    private static let alphaSteps = 20
-    private static var cache: [Int: [Dot]] = [:]
+    typealias Stop = (position: CGFloat, r: Double, g: Double, b: Double)
 
-    static func dots(count: Int) -> [Dot] {
-        if let cached = cache[count] { return cached }
-        let built = build(count: count)
-        cache[count] = built
-        return built
-    }
+    static let darkStops: [Stop] = [
+        (0, 0x2F, 0xD0, 0x6E), (0.24, 0x7B, 0xEF, 0xA6), (0.44, 0xD6, 0xF7, 0xE1), (0.62, 0xEC, 0xEC, 0xE8), (1, 0x8E, 0x8E, 0x8B),
+    ].map { Stop(position: $0.0, r: Double($0.1) / 255, g: Double($0.2) / 255, b: Double($0.3) / 255) }
 
-    /// Цвет и прозрачность группы. Цвет: зелёный сверху, смесь к серому внизу, серый у низа.
-    static func shade(for group: Int) -> (color: Color, alpha: Double) {
-        let colorKey = group / (alphaSteps + 1) - 1
-        let alpha = Double(group % (alphaSteps + 1)) / Double(alphaSteps)
-        switch colorKey {
-        case -1: return (AppColor.fill, alpha)
-        case 8: return (AppColor.ink, alpha)
-        default: return (AppColor.fill.mix(with: AppColor.ink, by: Double(colorKey) / 7), alpha)
+    static let lightStops: [Stop] = [
+        (0, 0x0F, 0x8A, 0x45), (0.26, 0x27, 0xB8, 0x64), (0.44, 0x7F, 0xD6, 0xA2), (0.64, 0x8C, 0x8C, 0x86), (1, 0xC8, 0xC8, 0xC2),
+    ].map { Stop(position: $0.0, r: Double($0.1) / 255, g: Double($0.2) / 255, b: Double($0.3) / 255) }
+
+    static func color(at t: CGFloat, stops: [Stop]) -> Color {
+        let t = min(max(t, 0), 1)
+        guard let upper = stops.firstIndex(where: { $0.position >= t }), upper > 0 else {
+            let s = stops[0]
+            return Color(red: s.r, green: s.g, blue: s.b)
         }
-    }
-
-    private static func build(count: Int) -> [Dot] {
-        let golden = Double.pi * (3 - 5.0.squareRoot())
-        let tilt = 0.35
-        return (0..<count).map { i in
-            let y = 1 - 2 * (Double(i) + 0.5) / Double(count)
-            let r = (1 - y * y).squareRoot()
-            let theta = golden * Double(i)
-            let x = cos(theta) * r
-            let z0 = sin(theta) * r
-            let yy = y * cos(tilt) - z0 * sin(tilt)
-            let z = y * sin(tilt) + z0 * cos(tilt)
-
-            // Заднюю полусферу прячем: виден только «передний» слой, как в референсе.
-            let depth = (z + 1) / 2
-            let rim = 1 - abs(z)
-            let t = (yy + 1) / 2   // 1 — верх, 0 — низ
-            let alpha = 0.18 + 0.82 * max(depth, rim * 0.8)
-            let diameter = 1.2 + 1.4 * depth
-
-            let colorKey: Int
-            let alphaMultiplier: Double
-            if t > 0.62 {
-                colorKey = -1
-                alphaMultiplier = 1
-            } else if t > 0.45 {
-                colorKey = Int(((0.62 - t) / 0.17 * 7).rounded())
-                alphaMultiplier = 1
-            } else {
-                colorKey = 8
-                alphaMultiplier = 0.55 + 0.45 * t
-            }
-            let alphaStep = Int((alpha * alphaMultiplier * Double(alphaSteps)).rounded())
-            return Dot(x: x, y: yy, diameter: diameter, group: (colorKey + 1) * (alphaSteps + 1) + alphaStep)
-        }
+        let a = stops[upper - 1], b = stops[upper]
+        let k = Double((t - a.position) / (b.position - a.position))
+        return Color(red: a.r + (b.r - a.r) * k, green: a.g + (b.g - a.g) * k, blue: a.b + (b.b - a.b) * k)
     }
 }
 
-/// Мягкое зелёное свечение за элементом.
+/// Ореол за сферой и фигурами: радиальный градиент до 65 % дальнего угла, как `.halo`.
 struct GlowHalo: View {
     var body: some View {
-        RadialGradient(
-            colors: [AppColor.glow.opacity(0.22), .clear],
-            center: .center,
-            startRadius: 0,
-            endRadius: 200
-        )
+        GeometryReader { geo in
+            let far = hypot(geo.size.width / 2, geo.size.height / 2)
+            RadialGradient(colors: [AppColor.halo, .clear], center: .center, startRadius: 0, endRadius: far * 0.65)
+        }
         .accessibilityHidden(true)
     }
 }
@@ -164,7 +131,7 @@ struct MeshFloor: View {
                 var line = Path()
                 line.move(to: CGPoint(x: 0, y: y))
                 line.addLine(to: CGPoint(x: size.width, y: y))
-                context.stroke(line, with: .color(AppColor.ink.opacity(0.10 + 0.12 * t)), lineWidth: 0.7)
+                context.stroke(line, with: .color(AppColor.mesh), lineWidth: 0.7)
             }
             let columns = 14
             for i in 0...columns {

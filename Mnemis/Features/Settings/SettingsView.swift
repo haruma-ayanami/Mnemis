@@ -5,6 +5,7 @@ import SwiftUI
 struct SettingsView: View {
     @State private var viewModel: SettingsViewModel
     private let container: AppContainer
+    @Environment(\.colorScheme) private var scheme
 
     init(container: AppContainer) {
         self.container = container
@@ -100,11 +101,11 @@ struct SettingsView: View {
 
     private var learningGroup: some View {
         SettingsGroup(title: "Learning") {
-            SettingsRow(icon: "character.book.closed", tint: AppColor.accent, title: "Language") {
+            SettingsRow(icon: "character.book.closed", tint: AppColor.fill, title: "Language") {
                 Text("EN → RU").font(.system(size: 14, design: .monospaced)).foregroundStyle(AppColor.ash)
             }
             SettingsDivider()
-            SettingsRow(icon: "chart.bar", tint: AppColor.accent, title: "Level") {
+            SettingsRow(icon: "chart.bar", tint: AppColor.fill, title: "Level") {
                 Menu {
                     Picker("Level", selection: Binding(get: { viewModel.settings.proficiencyLevel }, set: { viewModel.setLevel($0) })) {
                         ForEach(LanguageLevel.allCases) { Text($0.rawValue).tag($0) }
@@ -114,7 +115,7 @@ struct SettingsView: View {
                 }
             }
             SettingsDivider()
-            SettingsRow(icon: "plus.circle", tint: AppColor.accent, title: "New words a day") {
+            SettingsRow(icon: "plus.circle", tint: AppColor.fill, title: "New words a day") {
                 HStack(spacing: 10) {
                     Text(String(format: "%02d", viewModel.settings.newWordsPerDay))
                         .font(.system(size: 15, weight: .medium, design: .monospaced)).foregroundStyle(AppColor.ink)
@@ -126,7 +127,7 @@ struct SettingsView: View {
                 }
             }
             SettingsDivider()
-            SettingsRow(icon: "text.quote", tint: AppColor.accent, title: "Idiom of the day", subtitle: "shown in Today") {
+            SettingsRow(icon: "text.quote", tint: AppColor.fill, title: "Idiom of the day", subtitle: "shown in Today") {
                 Toggle(isOn: Binding(get: { viewModel.settings.phrasesInToday }, set: { viewModel.setPhrasesInToday($0) })) { EmptyView() }
                     .toggleStyle(GlowToggleStyle())
             }
@@ -138,7 +139,7 @@ struct SettingsView: View {
             NavigationLink {
                 NotificationSettingsView(viewModel: viewModel)
             } label: {
-                SettingsRow(icon: "bell", tint: AppColor.fill, title: "Notifications") {
+                SettingsRow(icon: "bell", tint: AppColor.glassLine, title: "Notifications") {
                     HStack(spacing: 8) {
                         Text(viewModel.notificationsRowValue)
                             .font(.system(size: 14, design: .monospaced)).foregroundStyle(AppColor.ash)
@@ -149,7 +150,7 @@ struct SettingsView: View {
             }
             .buttonStyle(PressScaleStyle())
             SettingsDivider()
-            SettingsRow(icon: "speaker.wave.2", tint: AppColor.fill, title: "Pronunciation sound") {
+            SettingsRow(icon: "speaker.wave.2", tint: AppColor.glassLine, title: "Pronunciation sound") {
                 Toggle(isOn: Binding(get: { viewModel.settings.soundEnabled }, set: { viewModel.setSound($0) })) { EmptyView() }
                     .toggleStyle(GlowToggleStyle())
             }
@@ -169,11 +170,13 @@ struct SettingsView: View {
                             Text(title(theme))
                                 .font(.system(size: 13, weight: .medium))
                         }
-                        .foregroundStyle(selected ? AppColor.onPrimary : AppColor.ash)
+                        .foregroundStyle(selected ? AppColor.ink : AppColor.ash)
                         .frame(maxWidth: .infinity, minHeight: 60)
                         .background {
                             if selected {
-                                Capsule().fill(AppColor.primary).matchedGeometryEffect(id: "theme-pill", in: themeSpace)
+                                Capsule().fill(AppColor.segmentActive)
+                                    .shadow(color: scheme == .light ? .black.opacity(0.10) : .clear, radius: 2, y: 1)
+                                    .matchedGeometryEffect(id: "theme-pill", in: themeSpace)
                             }
                         }
                     }
@@ -193,7 +196,7 @@ struct SettingsView: View {
             NavigationLink {
                 SourcesView(viewModel: viewModel)
             } label: {
-                SettingsRow(icon: "doc.text", tint: AppColor.smoke, title: "Sources & licenses") {
+                SettingsRow(icon: "doc.text", tint: AppColor.glassLine, title: "Sources & licenses") {
                     HStack(spacing: 8) {
                         Text("\(viewModel.sources.count)")
                             .font(.system(size: 14, design: .monospaced)).foregroundStyle(AppColor.ash)
@@ -275,7 +278,9 @@ struct SettingsDivider: View {
 /// Строка настроек: цветная иконка, название, подпись и значение справа.
 struct SettingsRow<Trailing: View>: View {
     var icon: String?
-    var tint: Color = AppColor.smoke
+    var tint: Color = AppColor.glassLine
+    /// Цвет значка: на зелёной заливке — светлый, на сером — ink (как `--onfill` и `--ink` в холсте).
+    var glyph: Color = AppColor.onPrimary
     let title: LocalizedStringKey
     var subtitle: LocalizedStringKey?
     @ViewBuilder var trailing: Trailing
@@ -285,7 +290,7 @@ struct SettingsRow<Trailing: View>: View {
             if let icon {
                 Image(systemName: icon)
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(AppColor.onFill)
+                    .foregroundStyle(glyph)
                     .frame(width: 32, height: 32)
                     .background(tint, in: .rect(cornerRadius: 9))
             }
