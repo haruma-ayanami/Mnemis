@@ -246,7 +246,7 @@ struct AddEntryView: View {
             case .word:
                 try viewModel.addWord(lemma: primary, translation: secondary)
             case .idiom:
-                try container.phraseEditor.add(text: primary, meaning: secondary, example: example)
+                try container.wordEditor.addIdiom(text: primary, meaning: secondary, example: example)
             }
             onSaved(kind)
             dismiss()

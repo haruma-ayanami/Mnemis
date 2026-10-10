@@ -4,7 +4,10 @@ import SwiftUI
 /// Сама сессия открывается на весь экран «зумом» из кнопки, поэтому панель вкладок не исчезает рывком, а уходит под сессию.
 struct LearnView: View {
     @State private var viewModel: LearnViewModel
+    @State private var practice: PracticeViewModel
+    @State private var mode: LearnMode = .cards
     @State private var isInSession = false
+    @State private var isPracticing = false
     @Namespace private var zoom
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private let container: AppContainer
@@ -12,6 +15,7 @@ struct LearnView: View {
     init(container: AppContainer) {
         self.container = container
         _viewModel = State(initialValue: LearnViewModel(container: container))
+        _practice = State(initialValue: PracticeViewModel(container: container))
     }
 
     var body: some View {
@@ -20,19 +24,74 @@ struct LearnView: View {
             DecorLayer {
                 DotRings().frame(width: 610, height: 610).opacity(0.45)
             }
-            content
+            VStack(alignment: .leading, spacing: 0) {
+                header
+                content
+            }
         }
         .animation(reduceMotion ? Motion.reduced : Motion.enter, value: viewModel.current == nil)
+        .animation(Motion.swap, value: mode)
         .onAppear { viewModel.startIfNeeded() }
         .task(id: container.router.sessionRequest) { await openRequestedSession() }
         .fullScreenCover(isPresented: $isInSession) {
             LearnSessionView(viewModel: viewModel, onClose: { isInSession = false })
                 .navigationTransition(.zoom(sourceID: Self.startSource, in: zoom))
         }
+        .fullScreenCover(isPresented: $isPracticing, onDismiss: { practice.loadPlan() }) {
+            PracticeSessionView(viewModel: practice, onClose: { isPracticing = false })
+        }
     }
+
+    /// Заголовок и переключатель «Cards | Practice»: карточки SRS или упражнения по тем же словам.
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Learn")
+                .font(.mnemisTitle).tracking(-0.8)
+                .foregroundStyle(AppColor.ink)
+                .screenEntrance()
+            HStack(spacing: 4) {
+                ForEach(LearnMode.allCases) { item in
+                    let selected = mode == item
+                    Button { withAnimation(Motion.swap) { mode = item } } label: {
+                        Text(item.title)
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundStyle(selected ? AppColor.onPrimary : AppColor.ash)
+                            .frame(maxWidth: .infinity, minHeight: 38)
+                            .background {
+                                if selected {
+                                    Capsule().fill(AppColor.primary).matchedGeometryEffect(id: "learn-mode", in: modeSpace)
+                                }
+                            }
+                    }
+                    .buttonStyle(PressScaleStyle())
+                    .accessibilityAddTraits(selected ? [.isSelected] : [])
+                }
+            }
+            .padding(4)
+            .glassCapsule()
+        }
+        .padding(.horizontal, 20).padding(.top, 8)
+    }
+
+    @Namespace private var modeSpace
 
     @ViewBuilder
     private var content: some View {
+        if mode == .practice {
+            PracticeDeckView(plan: practice.plan, onStart: {
+                practice.start()
+                isPracticing = true
+            })
+            .transition(.opacity)
+            .task { practice.loadPlan() }
+        } else {
+            cardsContent
+                .transition(.opacity)
+        }
+    }
+
+    @ViewBuilder
+    private var cardsContent: some View {
         switch viewModel.state {
         case .loading:
             LoadingView()
@@ -63,6 +122,21 @@ struct LearnView: View {
     }
 
     private static let startSource = "learn-session"
+}
+
+/// Режимы экрана Learn: карточки SRS или упражнения по словам, которые учит пользователь.
+enum LearnMode: String, CaseIterable, Identifiable {
+    case cards
+    case practice
+
+    var id: String { rawValue }
+
+    var title: LocalizedStringKey {
+        switch self {
+        case .cards: "Cards"
+        case .practice: "Practice"
+        }
+    }
 }
 
 /// Сессия во весь экран: карточки, затем итоги. Следующая карточка въезжает справа, прошлая уходит влево.
@@ -121,11 +195,6 @@ private struct LearnDeckView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Learn")
-                .font(.mnemisTitle).tracking(-0.8)
-                .foregroundStyle(AppColor.ink)
-                .screenEntrance()
-
             Button(action: onStart) { deck }
                 .buttonStyle(PressScaleStyle())
                 .padding(.top, 28)
@@ -282,10 +351,6 @@ struct LearnEmptyView: View {
             }
 
             VStack(alignment: .leading, spacing: 0) {
-                Text("Learn")
-                    .font(.mnemisTitle).tracking(-0.8)
-                    .foregroundStyle(AppColor.ink)
-
                 VStack(spacing: 14) {
                     Text("[ next review ]").bracketLabel(AppColor.accent)
                     if let next = viewModel.nextReviewDate {

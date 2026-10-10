@@ -98,6 +98,13 @@ struct ProgressRepository {
         ).first?.domain
     }
 
+    /// Удаляет прогресс слова: вызывается вместе с удалением самого слова.
+    func delete(wordID: UUID) throws {
+        for entity in try context.fetch(FetchDescriptor<WordProgressEntity>(predicate: #Predicate { $0.wordID == wordID })) {
+            context.delete(entity)
+        }
+    }
+
     func upsert(_ progress: WordProgress) throws {
         let wordID = progress.wordID
         let existing = try context.fetch(

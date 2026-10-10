@@ -35,6 +35,7 @@ final class WordEntity {
     var isAPIOrigin: Bool = false
     var sortRank: Int = Int.max
     var isStarted: Bool = false
+    var isIdiom: Bool = false
     /// Перевод, определение и заметка в нижнем регистре: поиск идёт по базе, а не по словам в памяти.
     var searchText: String = ""
 
@@ -173,14 +174,14 @@ final class DailyActivityEntity {
     }
 }
 
+/// Прежняя таблица личных идиом. Больше не пишется: при запуске переносится в слова (`PhraseMigration`).
+/// Прежняя таблица личных идиом. Больше не пишется: при запуске переносится в слова (`PhraseMigration`).
 @Model
 final class PhraseEntity {
     #Index<PhraseEntity>([\.createdAt])
 
     var id: UUID = UUID()
-    static let idiomKind = "idiom"
-
-    var kindRaw: String = PhraseEntity.idiomKind
+    var kindRaw: String = "idiom"
     var text: String = ""
     var meaning: String = ""
     var example: String?
@@ -193,7 +194,5 @@ final class PhraseEntity {
     /// Текст, по которому идёт поиск: в нижнем регистре, без лишних пробелов.
     var searchText: String = ""
 
-    init(_ phrase: Phrase) {
-        apply(phrase)
-    }
+    init() {}
 }

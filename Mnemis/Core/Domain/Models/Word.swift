@@ -72,8 +72,23 @@ struct Word: Identifiable, Equatable, Sendable {
         return [WordMeaning(partOfSpeech: partOfSpeech ?? "", translation: translation)]
     }
 
+    /// Идиома хранится как слово с частью речи `idiom`: прогресс, статусы и повторения у неё такие же.
+    var isIdiom: Bool { partOfSpeech == Word.idiomPartOfSpeech }
+
     /// Нормализованная форма для поиска и защиты от дублей.
     var normalizedLemma: String { TextNormalizer.normalize(lemma) }
+
+    static let idiomPartOfSpeech = "idiom"
+    /// Идиомы без частотного ранга попадают в очередь новых слов между частотными словами.
+    static let idiomSortRank = 2500
+}
+
+/// Что показывает список словаря: слова или идиомы.
+enum WordKind: Equatable, Sendable {
+    case words
+    case idioms
+
+    var isIdiom: Bool { self == .idioms }
 }
 
 /// Перевод для одной части речи.

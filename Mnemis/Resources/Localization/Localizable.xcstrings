@@ -76,6 +76,9 @@
     "[ today's deck ]" : {
 
     },
+    "[ translation · %@ ]" : {
+
+    },
     "[ translation · optional ]" : {
 
     },
@@ -141,6 +144,12 @@
     "+" : {
 
     },
+    "+%lld" : {
+
+    },
+    "~%lld min" : {
+
+    },
     "≈ %lld min a day" : {
 
     },
@@ -163,6 +172,9 @@
 
     },
     "┘" : {
+
+    },
+    "▮▯▯▯▯" : {
 
     },
     "▸" : {
@@ -270,6 +282,9 @@
     "Back" : {
 
     },
+    "Back to Idioms" : {
+
+    },
     "Back to learning" : {
 
     },
@@ -291,6 +306,9 @@
     "Cancel" : {
 
     },
+    "card" : {
+
+    },
     "Card %lld of %lld" : {
       "localizations" : {
         "en" : {
@@ -301,7 +319,7 @@
         }
       }
     },
-    "cards · tap to start" : {
+    "cards" : {
 
     },
     "change any time in Settings → Notifications" : {
@@ -341,6 +359,12 @@
 
     },
     "Delete account?" : {
+
+    },
+    "Delete example" : {
+
+    },
+    "Delete idiom" : {
 
     },
     "Done" : {
@@ -415,6 +439,9 @@
     "I know" : {
 
     },
+    "I know it" : {
+
+    },
     "I know this" : {
 
     },
@@ -440,16 +467,28 @@
         }
       }
     },
+    "In your study list" : {
+
+    },
     "Intermediate" : {
 
     },
     "interval" : {
 
     },
+    "It rarely shows up as the idiom of the day." : {
+
+    },
+    "It shows up in Today as the idiom of the day." : {
+
+    },
     "Keep your streak" : {
 
     },
     "Keep your words safe" : {
+
+    },
+    "known" : {
 
     },
     "Known" : {
@@ -531,9 +570,6 @@
     "never" : {
 
     },
-    "new" : {
-
-    },
     "New idiom" : {
 
     },
@@ -546,10 +582,16 @@
     "new words" : {
 
     },
+    "New words" : {
+
+    },
     "New words per day" : {
 
     },
     "next review" : {
+
+    },
+    "Next review after this" : {
 
     },
     "No connection. Write the meaning yourself, the idiom is saved offline." : {
@@ -645,6 +687,9 @@
     "Remind me in 1 hour" : {
 
     },
+    "Remove %@ meaning" : {
+
+    },
     "Restore after reinstalling" : {
 
     },
@@ -658,6 +703,9 @@
 
     },
     "reviews" : {
+
+    },
+    "Reviews" : {
 
     },
     "Reviews come on top and never count against this limit." : {
@@ -750,6 +798,9 @@
     "Step %lld of 3" : {
 
     },
+    "Still learning" : {
+
+    },
     "streak · longest" : {
 
     },
@@ -772,6 +823,9 @@
 
     },
     "System" : {
+
+    },
+    "tap to start →" : {
 
     },
     "This idiom is already in your list." : {
@@ -822,6 +876,9 @@
     "Where do you start?" : {
 
     },
+    "Where you heard it, how to use it" : {
+
+    },
     "Word" : {
 
     },
@@ -850,6 +907,9 @@
 
     },
     "you" : {
+
+    },
+    "You know this idiom" : {
 
     },
     "Your note" : {
