@@ -25,7 +25,8 @@ extension WordEntity {
         createdAt = word.createdAt
         updatedAt = word.updatedAt
         isAPIOrigin = word.origin == .api
-        sortRank = word.frequencyRank ?? Int.max
+        isIdiom = word.isIdiom
+        sortRank = word.frequencyRank ?? (word.isIdiom ? Word.idiomSortRank : Int.max)
         searchText = ([word.translation] + word.meanings.map(\.translation) + [word.definition ?? "", word.userNote ?? ""])
             .joined(separator: "\n")
             .lowercased()

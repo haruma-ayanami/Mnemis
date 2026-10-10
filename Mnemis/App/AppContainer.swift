@@ -20,7 +20,6 @@ final class AppContainer {
     let dailyWords: DailyWordRepository
     let settingsRepository: SettingsRepository
     let dailyActivity: DailyActivityRepository
-    let phrases: PhraseRepository
 
     init(
         persistence: PersistenceController,
@@ -43,7 +42,6 @@ final class AppContainer {
         self.dailyWords = DailyWordRepository(context: context)
         self.settingsRepository = SettingsRepository(context: context)
         self.dailyActivity = DailyActivityRepository(context: context)
-        self.phrases = PhraseRepository(context: context)
         self.dictionary = dictionary ?? DictionaryService(providers: [
             LocalDictionaryProvider(words: words),
             FreeDictionaryProvider(),
@@ -98,8 +96,8 @@ final class AppContainer {
         )
     }
 
-    var phraseEditor: PhraseEditor {
-        PhraseEditor(phrases: phrases, persistence: persistence, clock: clock)
+    var practice: PracticeUseCase {
+        PracticeUseCase(words: words, progress: progress)
     }
 
     var studyQueue: StudyQueueUseCase {
@@ -115,7 +113,7 @@ final class AppContainer {
     }
 
     var wordEditor: WordEditor {
-        WordEditor(words: words, persistence: persistence, clock: clock)
+        WordEditor(words: words, progress: progress, persistence: persistence, clock: clock)
     }
 
     var wordEnrichment: WordEnrichment {
@@ -146,6 +144,12 @@ final class AppContainer {
         }
 
         do {
+            try PhraseMigration.run(persistence: persistence, words: words, wordStatus: WordStatusUseCase(progress: progress, persistence: persistence, clock: clock))
+        } catch {
+            Log.persistence.error("Idiom migration failed: \(String(describing: error), privacy: .public)")
+        }
+
+        do {
             try refreshSeedIfNeeded()
         } catch {
             Log.persistence.error("Built-in dictionary refresh failed: \(String(describing: error), privacy: .public)")
@@ -168,7 +172,7 @@ final class AppContainer {
 
     /// Версия производных данных: сводка активности и флаги «слово начато» и `sortRank`.
     /// Пересчитываем один раз на версию, а не при каждом запуске.
-    static let derivedDataVersion = 3
+    static let derivedDataVersion = 4
     private static let derivedDataVersionKey = "mnemis.derivedDataVersion"
 
     private func repairDerivedDataIfNeeded(defaults: UserDefaults = .standard) throws {

@@ -9,6 +9,17 @@ struct DailyWordUseCase {
     let persistence: PersistenceController
     let clock: any Clock
 
+    /// Идиома дня: детерминированно по дню. Берём идиомы, которые пользователь ещё учит;
+    /// если все отмечены «знаю» или отложены, выбираем из всех идиом.
+    func idiomOfTheDay(dayID: String) throws -> Word? {
+        let idioms = try words.idioms().sorted { $0.id.uuidString < $1.id.uuidString }
+        guard !idioms.isEmpty else { return nil }
+        let statuses = try progress.statuses(forWordIDs: idioms.map(\.id))
+        let learning = idioms.filter { statuses[$0.id].map { $0 != .known && $0 != .suspended } ?? true }
+        let pool = learning.isEmpty ? idioms : learning
+        return pool[Int(DailyWordSelector.fnv1a(dayID) % UInt64(pool.count))]
+    }
+
     /// Возвращает уже назначенное слово дня или выбирает и сохраняет новое.
     func todaysWord(preferredLevel: String?) throws -> Word? {
         let dayID = LocalDay.id(for: clock.now, calendar: clock.calendar)
@@ -18,7 +29,8 @@ struct DailyWordUseCase {
             return word
         }
 
-        let candidates = try words.allWords()
+        // Слово дня — только слово: идиомы показываются отдельно, как идиома дня.
+        let candidates = try words.allWords().filter { !$0.isIdiom }
         let progressAll = try progress.all()
         let previouslyAssigned = Set(try dailyWords.all().map(\.wordID))
 

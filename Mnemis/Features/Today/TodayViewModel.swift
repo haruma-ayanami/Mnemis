@@ -19,8 +19,9 @@ struct WeekDay: Identifiable, Equatable {
 final class TodayViewModel {
     private(set) var dailyWord: Word?
     private(set) var dailyExample: String?
-    /// Фраза дня из личного списка идиом и предложений; nil, если список пуст или фразы выключены в Settings.
-    private(set) var phrase: Phrase?
+    /// Идиома дня из словаря; nil, если идиом нет или их показ выключен в Settings.
+    private(set) var idiom: Word?
+    private(set) var idiomExample: String?
     private(set) var dueCount = 0
     private(set) var newStarted = 0
     private(set) var newLimit = 5
@@ -50,9 +51,10 @@ final class TodayViewModel {
             dailyWord = try container.dailyWordUseCase.todaysWord(preferredLevel: settings.proficiencyLevel.rawValue)
 
             dailyExample = try dailyWord.flatMap { try container.words.examples(forWordID: $0.id).first?.sentence }
-            phrase = settings.phrasesInToday
-                ? try container.phrases.phraseOfDay(dayID: LocalDay.id(for: now, calendar: calendar))
+            idiom = settings.phrasesInToday
+                ? try container.dailyWordUseCase.idiomOfTheDay(dayID: LocalDay.id(for: now, calendar: calendar))
                 : nil
+            idiomExample = try idiom.flatMap { try container.words.examples(forWordID: $0.id).first?.sentence }
 
             // Все числа здесь — счётчики и одна дата из базы: прогресс целиком не читаем.
             totalWords = try container.words.countOwnAndBuiltIn()

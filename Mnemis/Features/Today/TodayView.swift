@@ -84,11 +84,11 @@ struct TodayView: View {
 
     @ViewBuilder
     private var wordCard: some View {
-        if let phrase = viewModel.phrase {
+        if let idiom = viewModel.idiom {
             VStack(alignment: .leading, spacing: 12) {
                 DailyCardTabs(selection: $cardTab)
                 if cardTab == .phrase {
-                    PhraseCard(phrase: phrase)
+                    WordCard(word: idiom, label: "[ idiom of the day ]", example: viewModel.idiomExample)
                         .transition(.asymmetric(insertion: .offset(x: 32).combined(with: .opacity), removal: .opacity))
                 } else {
                     dailyWordCard

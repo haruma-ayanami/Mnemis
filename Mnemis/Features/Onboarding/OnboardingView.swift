@@ -221,7 +221,7 @@ private struct SelectedGlass: ViewModifier {
 
     func body(content: Content) -> some View {
         if selected {
-            content.glassEffect(.regular, in: .rect(cornerRadius: 24))
+            content.glassCard(cornerRadius: 24)
         } else {
             content
         }

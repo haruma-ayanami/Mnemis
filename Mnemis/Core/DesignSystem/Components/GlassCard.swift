@@ -1,17 +1,42 @@
 import SwiftUI
 
+/// Стекло по формуле холста (`.glass`): градиент из токенов, блик слева вверху, тонкая граница и тень.
+/// Системный Liquid Glass на тёмном фоне светлее, поэтому здесь свой, тот же, что в дизайне.
+struct GlassSurface<S: Shape>: ViewModifier {
+    let shape: S
+
+    func body(content: Content) -> some View {
+        content.background {
+            shape
+                .fill(LinearGradient(colors: [AppColor.glassTop, AppColor.glassBottom], startPoint: .top, endPoint: .bottom))
+                .shadow(color: AppColor.glassShadow, radius: 24, x: 0, y: 12)
+                .overlay {
+                    shape.fill(RadialGradient(colors: [AppColor.glassSpec, .clear], center: UnitPoint(x: 0.15, y: 0), startRadius: 0, endRadius: 240))
+                }
+                .overlay {
+                    shape.stroke(AppColor.glassLine, lineWidth: 1)
+                }
+                .overlay {
+                    // Внутренний блик по верхнему краю: `inset 0 1px 0 var(--hl)`.
+                    shape.stroke(AppColor.glassHighlight, lineWidth: 1)
+                        .mask(LinearGradient(colors: [.white, .clear], startPoint: .top, endPoint: UnitPoint(x: 0.5, y: 0.15)))
+                }
+        }
+    }
+}
+
 extension View {
-    /// Liquid Glass на карточке или панели. Стекло только на плавающих слоях, не на фоне.
+    /// Стеклянная карточка с круговыми углами, как в холсте.
     func glassCard(cornerRadius: CGFloat = 28) -> some View {
-        self.glassEffect(.regular, in: .rect(cornerRadius: cornerRadius))
+        modifier(GlassSurface(shape: RoundedRectangle(cornerRadius: cornerRadius, style: .circular)))
     }
 
     func glassCapsule() -> some View {
-        self.glassEffect(.regular, in: .capsule)
+        modifier(GlassSurface(shape: Capsule()))
     }
 
     func glassCircle() -> some View {
-        self.glassEffect(.regular, in: .circle)
+        modifier(GlassSurface(shape: Circle()))
     }
 
     /// Декор на заднем плане: не влияет на раскладку и не выходит за пределы экрана.

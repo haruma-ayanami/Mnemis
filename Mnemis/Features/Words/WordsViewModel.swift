@@ -1,7 +1,7 @@
 import Foundation
 import Observation
 
-/// Личный словарь: список страницами, поиск по базе, статусы и добавление слов.
+/// Личный словарь: слова и идиомы, список страницами, поиск по базе, статусы и добавление.
 /// В памяти держим только текущую страницу, статусы и счётчики: весь словарь здесь не читается.
 @Observable
 @MainActor
@@ -9,6 +9,14 @@ final class WordsViewModel {
     /// Размер страницы списка и предел результатов поиска.
     static let pageSize = 120
     static let searchLimit = 200
+
+    /// Что показывает список: слова или идиомы. Переключается вкладками раздела.
+    var kind: WordKind = .words {
+        didSet {
+            guard oldValue != kind else { return }
+            load()
+        }
+    }
 
     var query = "" {
         didSet {
@@ -26,18 +34,22 @@ final class WordsViewModel {
         }
     }
 
-    /// `nil` — все слова.
+    /// `nil` — все строки выбранного вида.
     var filter: LearningStatus? { didSet { reloadList() } }
 
     /// Строки, которые показывает список: страница, результаты поиска или слова статуса.
     private(set) var results: [Word] = []
-    private(set) var totalCount = 0
+    private(set) var wordCount = 0
+    private(set) var idiomCount = 0
     private(set) var statuses: [UUID: LearningStatus] = [:]
     private(set) var state: ScreenState = .loading
 
+    /// Общее число строк текущего вида: для подписи под заголовком.
+    var totalCount: Int { kind.isIdiom ? idiomCount : wordCount }
+
     private var counts: [LearningStatus?: Int] = [:]
     private var hasMorePages = false
-    /// Слова выбранного статуса, кроме «new». Их немного, поэтому держим список целиком и режем страницами.
+    /// Строки выбранного статуса. Их немного, поэтому держим список целиком и режем страницами.
     private var statusWords: [Word] = []
     private var searchTask: Task<Void, Never>?
 
@@ -47,9 +59,14 @@ final class WordsViewModel {
         self.container = container
     }
 
-    /// Количество слов для чипа фильтра.
+    /// Количество строк для чипа фильтра текущего вида.
     func count(for filter: LearningStatus?) -> Int {
         counts[filter] ?? 0
+    }
+
+    /// Число строк вида: для сегментов «Words | Idioms» без переключения.
+    func total(for kind: WordKind) -> Int {
+        kind.isIdiom ? idiomCount : wordCount
     }
 
     func status(of word: Word) -> LearningStatus {
@@ -58,7 +75,8 @@ final class WordsViewModel {
 
     func load() {
         do {
-            totalCount = try container.words.countAll()
+            wordCount = try container.words.count(kind: .words)
+            idiomCount = try container.words.count(kind: .idioms)
             try recount()
             reloadList()
         } catch {
@@ -83,7 +101,8 @@ final class WordsViewModel {
                 appended = try container.words.page(
                     offset: results.count,
                     limit: Self.pageSize,
-                    onlyNotStarted: filter == .new
+                    onlyNotStarted: filter == .new,
+                    kind: kind
                 )
                 hasMorePages = appended.count == Self.pageSize
             }
@@ -94,14 +113,19 @@ final class WordsViewModel {
         }
     }
 
-    /// Свайп «I know»: слово выходит из повторений, как в карточке.
+    /// Свайп «I know»: строка выходит из повторений, как в карточке.
     func markKnown(_ word: Word) {
         perform { try container.wordStatus.markKnown(wordID: word.id) }
     }
 
-    /// Свайп «Suspend»: слово временно выходит из очереди.
+    /// Свайп «Suspend»: строка временно выходит из очереди.
     func suspend(_ word: Word) {
         perform { try container.wordStatus.suspend(wordID: word.id) }
+    }
+
+    /// Удаление слова или идиомы пользователя. Встроенные строки удалить нельзя.
+    func delete(_ word: Word) {
+        perform { try container.wordEditor.delete(word) }
     }
 
     private func perform(_ action: () throws -> Void) {
@@ -128,13 +152,14 @@ final class WordsViewModel {
 
     // MARK: - Внутреннее
 
-    /// Счётчики чипов считает база: по статусам прогресса и числу слов без прогресса.
+    /// Счётчики чипов: по статусам прогресса строк текущего вида и числу строк без прогресса.
     private func recount() throws {
         var result: [LearningStatus?: Int] = [nil: totalCount]
         for status in LearningStatus.allCases where status != .new {
-            result[status] = try container.progress.count(status: status)
+            let ids = try container.progress.wordIDs(status: status)
+            result[status] = try container.words.count(kind: kind, ids: ids)
         }
-        result[.new] = try container.words.countNotStarted()
+        result[.new] = try container.words.countNotStarted(kind: kind)
         counts = result
     }
 
@@ -148,7 +173,7 @@ final class WordsViewModel {
         }
     }
 
-    /// Пересобирает список под текущие запрос и фильтр. Всё, что читается, — это первая страница.
+    /// Пересобирает список под текущие вид, запрос и фильтр. Всё, что читается, — это первая страница.
     private func reloadList() {
         do {
             results = []
@@ -156,7 +181,7 @@ final class WordsViewModel {
             statusWords = []
 
             if !query.isEmpty {
-                let found = try container.words.search(query, limit: Self.searchLimit)
+                let found = try container.words.search(query, limit: Self.searchLimit, kind: kind)
                 // Статусы нужны до фильтра: по ним отбираем результаты.
                 try refreshStatuses(for: found)
                 results = filter.map { selected in found.filter { status(of: $0) == selected } } ?? found
@@ -168,7 +193,8 @@ final class WordsViewModel {
                 results = try container.words.page(
                     offset: 0,
                     limit: Self.pageSize,
-                    onlyNotStarted: filter == .new
+                    onlyNotStarted: filter == .new,
+                    kind: kind
                 )
                 hasMorePages = results.count == Self.pageSize
             }
@@ -181,6 +207,8 @@ final class WordsViewModel {
 
     private func wordsWithStatus(_ status: LearningStatus) throws -> [Word] {
         let ids = try container.progress.wordIDs(status: status)
-        return try container.words.words(ids: ids).sorted { $0.normalizedLemma < $1.normalizedLemma }
+        return try container.words.words(ids: ids)
+            .filter { $0.isIdiom == kind.isIdiom }
+            .sorted { $0.normalizedLemma < $1.normalizedLemma }
     }
 }

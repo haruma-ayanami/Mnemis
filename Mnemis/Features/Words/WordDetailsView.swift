@@ -27,6 +27,14 @@ struct WordDetailsView: View {
                     noteSection
                     sources
                     actions
+                    if viewModel.word.origin == .user {
+                        Button(role: .destructive) {
+                            if viewModel.delete() { dismiss() }
+                        } label: {
+                            Text("Delete").font(.system(size: 15, weight: .medium)).frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(QuietButtonStyle())
+                    }
                     if let error = viewModel.errorMessage {
                         Text(error).font(.footnote).foregroundStyle(.red)
                     }

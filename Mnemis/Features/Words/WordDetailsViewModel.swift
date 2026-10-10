@@ -39,6 +39,18 @@ final class WordDetailsViewModel {
     func suspend() { perform { try container.wordStatus.suspend(wordID: word.id) } }
     func resume() { perform { try container.wordStatus.resume(wordID: word.id) } }
 
+    /// Удаляет слово или идиому пользователя. Возвращает `true`, если удаление прошло.
+    func delete() -> Bool {
+        do {
+            try container.wordEditor.delete(word)
+            onChange()
+            return true
+        } catch {
+            errorMessage = error.localizedDescription
+            return false
+        }
+    }
+
     func addExample(_ sentence: String) {
         perform { try container.wordEditor.addExample(wordID: word.id, sentence: sentence) }
     }

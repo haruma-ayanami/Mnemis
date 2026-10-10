@@ -128,7 +128,7 @@ struct WordRepository {
 
     /// Поиск по базе: сначала слова, которые начинаются с запроса, затем содержащие его в лемме,
     /// переводе, определении, заметке и пользовательских примерах. Словарь целиком в память не читаем.
-    func search(_ query: String, limit: Int) throws -> [Word] {
+    func search(_ query: String, limit: Int, kind: WordKind? = nil) throws -> [Word] {
         let needle = TextNormalizer.normalize(query)
         guard !needle.isEmpty, limit > 0 else { return [] }
 
@@ -159,20 +159,69 @@ struct WordRepository {
         }
 
         return found.values
+            .filter { kind == nil || $0.word.isIdiom == kind?.isIdiom }
             .sorted { ($0.score, $0.word.lemma) < ($1.score, $1.word.lemma) }
             .prefix(limit)
             .map(\.word)
     }
 
     /// Страница словаря по алфавиту. Смещение и размер страницы применяет база.
-    func page(offset: Int, limit: Int, onlyNotStarted: Bool = false) throws -> [Word] {
-        var descriptor = FetchDescriptor<WordEntity>(
-            predicate: #Predicate { !onlyNotStarted || !$0.isStarted },
-            sortBy: [SortDescriptor(\.normalizedLemma)]
-        )
+    func page(offset: Int, limit: Int, onlyNotStarted: Bool = false, kind: WordKind? = nil) throws -> [Word] {
+        var descriptor: FetchDescriptor<WordEntity>
+        if let kind {
+            let idioms = kind.isIdiom
+            descriptor = FetchDescriptor<WordEntity>(
+                predicate: #Predicate { $0.isIdiom == idioms && (!onlyNotStarted || !$0.isStarted) },
+                sortBy: [SortDescriptor(\.normalizedLemma)]
+            )
+        } else {
+            descriptor = FetchDescriptor<WordEntity>(
+                predicate: #Predicate { !onlyNotStarted || !$0.isStarted },
+                sortBy: [SortDescriptor(\.normalizedLemma)]
+            )
+        }
         descriptor.fetchOffset = offset
         descriptor.fetchLimit = limit
         return try context.fetch(descriptor).map(\.domain)
+    }
+
+    /// Все идиомы словаря: их немного, поэтому список целиком (для идиомы дня).
+    func idioms() throws -> [Word] {
+        try context.fetch(FetchDescriptor<WordEntity>(predicate: #Predicate { $0.isIdiom })).map(\.domain)
+    }
+
+    /// Слова или идиомы, которые ещё не начаты.
+    func countNotStarted(kind: WordKind) throws -> Int {
+        let idioms = kind.isIdiom
+        return try context.fetchCount(FetchDescriptor<WordEntity>(predicate: #Predicate { $0.isIdiom == idioms && !$0.isStarted }))
+    }
+
+    /// Сколько слов или идиом в словаре.
+    func count(kind: WordKind) throws -> Int {
+        let idioms = kind.isIdiom
+        return try context.fetchCount(FetchDescriptor<WordEntity>(predicate: #Predicate { $0.isIdiom == idioms }))
+    }
+
+    /// Сколько слов из списка относятся к виду. Для счётчиков статусов по разделам.
+    func count(kind: WordKind, ids: [UUID]) throws -> Int {
+        guard !ids.isEmpty else { return 0 }
+        let idioms = kind.isIdiom
+        return try context.fetchCount(FetchDescriptor<WordEntity>(
+            predicate: #Predicate { ids.contains($0.id) && $0.isIdiom == idioms }
+        ))
+    }
+
+    /// Случайная выборка для отвлекающих вариантов в упражнениях: три страницы по случайному смещению.
+    func sample(limit: Int, using random: inout some RandomNumberGenerator) throws -> [Word] {
+        let total = try countAll()
+        guard total > 0, limit > 0 else { return [] }
+        let perPage = max(1, limit / 3)
+        var result: [Word] = []
+        for _ in 0..<3 {
+            let offset = total > perPage ? Int.random(in: 0..<(total - perPage), using: &random) : 0
+            result += try page(offset: offset, limit: perPage)
+        }
+        return result
     }
 
     func countAll() throws -> Int {
