@@ -52,7 +52,7 @@ struct NotificationSettingsView: View {
                     Text("local only · no account needed").font(.system(size: 12, design: .monospaced)).foregroundStyle(AppColor.smoke)
                 }
             }
-            .toggleStyle(GlowToggleStyle())
+            .toggleStyle(MnemisToggleStyle())
             .padding(.horizontal, 16).frame(minHeight: 60)
             .glassCard(cornerRadius: 22)
             if enabled && !viewModel.notificationsAuthorized {
@@ -90,7 +90,7 @@ struct NotificationSettingsView: View {
                 }
             }
         }
-        .toggleStyle(GlowToggleStyle())
+        .toggleStyle(MnemisToggleStyle())
         .padding(.horizontal, 16).frame(minHeight: 58)
     }
 
@@ -116,7 +116,7 @@ struct NotificationSettingsView: View {
                         Text(weekdayLetters[index])
                             .font(.system(size: 13, weight: .medium, design: .monospaced))
                             .foregroundStyle(on ? AppColor.onFill : AppColor.ash)
-                            .frame(width: 36, height: 36)
+                            .frame(width: 40, height: 40)
                             .background(on ? AppColor.fill : .clear, in: .circle)
                             .overlay(Circle().stroke(on ? .clear : AppColor.hairline))
                     }
@@ -143,7 +143,7 @@ struct NotificationSettingsView: View {
                             Text("\(count)")
                                 .font(.system(size: 13, weight: .medium, design: .monospaced))
                                 .foregroundStyle(on ? AppColor.ink : AppColor.ash)
-                                .frame(width: 40, height: 30)
+                                .frame(width: 44, height: 36)
                                 .background(on ? AppColor.hairline : .clear, in: .capsule)
                         }
                         .buttonStyle(PressScaleStyle())

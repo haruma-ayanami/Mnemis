@@ -29,11 +29,21 @@ struct LearnView: View {
                 content
             }
         }
+        // Панель вкладок накрывает нижнюю часть экрана; вкладка Learn получает тот же запас, что и остальные.
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            Color.clear.frame(height: 74)
+        }
         .animation(reduceMotion ? Motion.reduced : Motion.enter, value: viewModel.current == nil)
         .animation(Motion.swap, value: mode)
         .onAppear { viewModel.startIfNeeded() }
+        // Очередь и план Practice привязаны к дню: после возврата в приложение и в полночь они собираются заново.
+        .onChange(of: container.router.refreshRequest) { _, _ in
+            guard !isInSession, !isPracticing else { return }
+            viewModel.startIfNeeded()
+            practice.loadPlan()
+        }
         .task(id: container.router.sessionRequest) { await openRequestedSession() }
-        .fullScreenCover(isPresented: $isInSession) {
+        .fullScreenCover(isPresented: $isInSession, onDismiss: { viewModel.startIfNeeded() }) {
             LearnSessionView(viewModel: viewModel, onClose: { isInSession = false })
                 .navigationTransition(.zoom(sourceID: Self.startSource, in: zoom))
         }

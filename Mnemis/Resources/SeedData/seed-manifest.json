@@ -12,6 +12,18 @@
       "name": "Free Dictionary API (dictionaryapi.dev)",
       "url": "https://dictionaryapi.dev",
       "licenseID": "dictionaryapi-dev"
+    },
+    {
+      "id": "kaikki-idioms",
+      "name": "Idiom lookup · English Wiktionary (kaikki.org)",
+      "url": "https://kaikki.org",
+      "licenseID": "cc-by-sa"
+    },
+    {
+      "id": "kaikki-ru",
+      "name": "Russian Wiktionary (kaikki.org/ruwiktionary)",
+      "url": "https://kaikki.org/ruwiktionary",
+      "licenseID": "cc-by-sa"
     }
   ],
   "licenses": [

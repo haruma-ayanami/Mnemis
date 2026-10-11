@@ -5,6 +5,8 @@ struct WordCard: View {
     let word: Word
     var label: LocalizedStringKey = "[ word of the day ]"
     var example: String?
+    /// Ссылка «Open in Dictionary» справа от разделителя (холст: Today).
+    var showsDictionaryLink = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -22,7 +24,15 @@ struct WordCard: View {
                     .foregroundStyle(AppColor.ash)
             }
 
-            AsciiDivider()
+            HStack {
+                AsciiDivider()
+                Spacer()
+                if showsDictionaryLink {
+                    // Область нажатия 44 pt не добавляет высоты строке.
+                    DictionaryLinkButton(term: word.lemma, fontSize: 14, minHeight: 44)
+                        .padding(.vertical, -14)
+                }
+            }
 
             MeaningsList(meanings: word.allMeanings)
             if let example {
@@ -36,7 +46,8 @@ struct WordCard: View {
         .padding(.top, 26).padding(.bottom, 24)
         .glassCard(cornerRadius: 32)
         .cornerMarks()
-        .accessibilityElement(children: .combine)
+        // С кнопкой внутри карточку нельзя склеивать в один элемент: кнопка пропала бы для VoiceOver.
+        .accessibilityElement(children: showsDictionaryLink ? .contain : .combine)
     }
 
     private var subtitle: String {
@@ -58,16 +69,19 @@ struct WordCard: View {
 struct MeaningsList: View {
     let meanings: [WordMeaning]
     var primarySize: CGFloat = 19
+    /// Метка части речи у каждого значения, даже когда оно одно (карточка ответа в Learn).
+    var showsLabels = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             ForEach(Array(meanings.enumerated()), id: \.offset) { index, meaning in
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    if meanings.count > 1 {
+                    if showsLabels || meanings.count > 1 {
                         Text(meaning.shortPartOfSpeech)
                             .font(.system(size: 12, design: .monospaced))
                             .foregroundStyle(AppColor.accent)
-                            .frame(width: 28, alignment: .leading)
+                            .lineLimit(1)
+                            .frame(width: 32, alignment: .leading)
                     }
                     Text(meaning.translation)
                         .font(.system(size: index == 0 ? primarySize : primarySize - 4, weight: index == 0 ? .medium : .regular))

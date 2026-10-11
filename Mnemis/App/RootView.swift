@@ -4,6 +4,7 @@ import SwiftUI
 struct RootView: View {
     let container: AppContainer
     @Bindable var router: AppRouter
+    @Environment(\.scenePhase) private var scenePhase
 
     init(container: AppContainer) {
         self.container = container
@@ -18,6 +19,8 @@ struct RootView: View {
                 if tab == router.selectedTab {
                     router.reselect(tab)
                 } else {
+                    // Новая вкладка открывается с развёрнутой панелью: сворачивание относится к прокрутке конкретного экрана.
+                    router.setTabBarFolded(false)
                     router.selectedTab = tab
                 }
             }
@@ -50,9 +53,17 @@ struct RootView: View {
                     Color.clear.frame(height: 74)
                 }
                 .overlay(alignment: .bottom) {
-                    MnemisTabBar(selection: tabSelection)
+                    if router.isTabBarVisible {
+                        MnemisTabBar(
+                            selection: tabSelection,
+                            folded: router.isTabBarFolded,
+                            onUnfold: { router.expandTabBarByUser() }
+                        )
                         .ignoresSafeArea(edges: .bottom)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
                 }
+                .animation(Motion.chrome, value: router.isTabBarVisible)
             } else {
                 OnboardingView(container: container)
             }
@@ -60,6 +71,13 @@ struct RootView: View {
         .tint(AppColor.accent)
         .foregroundStyle(AppColor.ink)
         .background(AppColor.background.ignoresSafeArea())
+        // Счётчики «на сегодня» привязаны к дню: после возврата в приложение и при смене дня экраны перечитываются.
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { router.requestRefresh() }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in
+            router.requestRefresh()
+        }
         .preferredColorScheme(router.colorScheme)
     }
 }

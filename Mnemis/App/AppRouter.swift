@@ -26,6 +26,45 @@ final class AppRouter {
     /// Learn открывает сессию поверх вкладки, когда видит новое значение.
     private(set) var sessionRequest = 0
 
+    /// Новый день или возврат в приложение: экраны с дневными счётчиками перечитывают данные.
+    private(set) var refreshRequest = 0
+
+    /// Панель вкладок: сколько открытых экранов её прячут (вложенные экраны Настроек, карточка слова).
+    private(set) var tabBarHiddenDepth = 0
+    /// Панель свёрнута в круг у правого края: так при прокрутке вниз занимается меньше места.
+    private(set) var isTabBarFolded = false
+
+    var isTabBarVisible: Bool { tabBarHiddenDepth == 0 }
+
+    func hideTabBar() { tabBarHiddenDepth += 1 }
+
+    func showTabBar() { tabBarHiddenDepth = max(0, tabBarHiddenDepth - 1) }
+
+    /// Пользователь раскрыл панель во время инерции списка: до нового касания прокрутка её не сворачивает.
+    private(set) var foldSuppressed = false
+
+    /// Прокрутка сворачивает панель, если её не раскрыли во время инерции.
+    func foldTabBarOnScroll() {
+        guard !foldSuppressed else { return }
+        setTabBarFolded(true)
+    }
+
+    /// Раскрытие по нажатию на круг работает и во время инерции списка.
+    func expandTabBarByUser() {
+        foldSuppressed = true
+        setTabBarFolded(false)
+    }
+
+    /// Новое касание пальцем снова разрешает сворачивание при прокрутке.
+    func userStartedScrolling() {
+        foldSuppressed = false
+    }
+
+    func setTabBarFolded(_ folded: Bool) {
+        guard folded != isTabBarFolded else { return }
+        isTabBarFolded = folded
+    }
+
     func reselect(_ tab: AppTab) {
         reselectedTab = tab
         reselectCount += 1
@@ -34,5 +73,9 @@ final class AppRouter {
     func startSession() {
         selectedTab = .learn
         sessionRequest += 1
+    }
+
+    func requestRefresh() {
+        refreshRequest += 1
     }
 }

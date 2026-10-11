@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import SwiftUI
 
 /// Личный словарь: слова и идиомы, список страницами, поиск по базе, статусы и добавление.
 /// В памяти держим только текущую страницу, статусы и счётчики: весь словарь здесь не читается.
@@ -71,6 +72,19 @@ final class WordsViewModel {
 
     func status(of word: Word) -> LearningStatus {
         statuses[word.id] ?? .new
+    }
+
+    /// Совпадение строки с запросом: точное, начало, вхождение в слово, заметка, перевод или значение.
+    static func match(of word: Word, query: String) -> SearchMatch? {
+        let needle = TextNormalizer.normalize(query)
+        guard !needle.isEmpty else { return nil }
+        let lemma = TextNormalizer.normalize(word.lemma)
+        if lemma == needle { return .exact }
+        if lemma.hasPrefix(needle) { return .startsWith }
+        if lemma.contains(needle) { return .contains }
+        if TextNormalizer.normalize(word.userNote ?? "").contains(needle) { return .note }
+        if TextNormalizer.normalize(word.translation).contains(needle) { return .translation }
+        return .meaning
     }
 
     func load() {
@@ -210,5 +224,21 @@ final class WordsViewModel {
         return try container.words.words(ids: ids)
             .filter { $0.isIdiom == kind.isIdiom }
             .sorted { $0.normalizedLemma < $1.normalizedLemma }
+    }
+}
+
+/// Подпись справа в результатах поиска (холст: Words-Search).
+enum SearchMatch: Equatable {
+    case exact, startsWith, contains, note, translation, meaning
+
+    var label: LocalizedStringKey {
+        switch self {
+        case .exact: "EXACT"
+        case .startsWith: "starts with"
+        case .contains: "contains"
+        case .note: "note"
+        case .translation: "translation"
+        case .meaning: "meaning"
+        }
     }
 }

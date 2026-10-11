@@ -4,8 +4,10 @@ import SwiftUI
 struct TodayView: View {
     @State private var viewModel: TodayViewModel
     @State private var cardTab: DailyCardTab = .word
+    private let container: AppContainer
 
     init(container: AppContainer) {
+        self.container = container
         _viewModel = State(initialValue: TodayViewModel(container: container))
     }
 
@@ -16,6 +18,7 @@ struct TodayView: View {
             content
         }
         .onAppear { viewModel.load() }
+        .onChange(of: container.router.refreshRequest) { _, _ in viewModel.load() }
     }
 
     private var backdrop: some View {
@@ -44,7 +47,7 @@ struct TodayView: View {
                 // Блоки появляются по очереди сверху вниз: взгляд идёт от слова дня к кнопке сессии.
                 VStack(alignment: .leading, spacing: 12) {
                     header.screenEntrance()
-                    Spacer().frame(height: 70)
+                    Spacer().frame(height: 40)
                     wordCard.screenEntrance(delay: 0.05)
                     tiles.screenEntrance(delay: 0.1)
                     WeekStrip(days: viewModel.week).screenEntrance(delay: 0.14)
@@ -54,8 +57,21 @@ struct TodayView: View {
                 .padding(.top, 8)
                 .padding(.bottom, 24)
             }
+            .foldsTabBarOnScroll(container.router)
             .scrollIndicators(.hidden)
         }
+    }
+
+    /// Строка под заголовком: сколько слов в словаре и сколько уже запомнено (холст: Today).
+    private var countsLine: some View {
+        var total = AttributedString("\(viewModel.totalWords.formatted()) words · ")
+        total.foregroundColor = AppColor.ash
+        var remembered = AttributedString(viewModel.rememberedCount.formatted())
+        remembered.foregroundColor = AppColor.accent
+        var tail = AttributedString(" remembered")
+        tail.foregroundColor = AppColor.ash
+        return Text(total + remembered + tail)
+            .font(.system(size: 12, design: .monospaced))
     }
 
     private var header: some View {
@@ -67,6 +83,7 @@ struct TodayView: View {
                     .font(.mnemisTitle)
                     .tracking(-0.8)
                     .foregroundStyle(AppColor.ink)
+                countsLine
             }
             Spacer()
             HStack(spacing: 7) {
@@ -84,27 +101,44 @@ struct TodayView: View {
 
     @ViewBuilder
     private var wordCard: some View {
-        if let idiom = viewModel.idiom {
-            VStack(alignment: .leading, spacing: 12) {
-                DailyCardTabs(selection: $cardTab)
-                if cardTab == .phrase {
-                    WordCard(word: idiom, label: "[ idiom of the day ]", example: viewModel.idiomExample)
-                        .transition(.asymmetric(insertion: .offset(x: 32).combined(with: .opacity), removal: .opacity))
-                } else {
-                    dailyWordCard
-                        .transition(.asymmetric(insertion: .offset(x: -32).combined(with: .opacity), removal: .opacity))
-                }
+        VStack(alignment: .leading, spacing: 12) {
+            if viewModel.idiom != nil || speakText != nil {
+                dailyRow
             }
-            .animation(Motion.swap, value: cardTab)
-        } else {
-            dailyWordCard
+            if let idiom = viewModel.idiom, cardTab == .phrase {
+                WordCard(word: idiom, label: "[ idiom of the day ]", example: viewModel.idiomExample, showsDictionaryLink: true)
+                    .transition(.asymmetric(insertion: .offset(x: 32).combined(with: .opacity), removal: .opacity))
+            } else {
+                dailyWordCard
+                    .transition(.asymmetric(insertion: .offset(x: -32).combined(with: .opacity), removal: .opacity))
+            }
         }
+        .animation(Motion.swap, value: cardTab)
+    }
+
+    /// Строка над карточкой: переключатель Word | Idiom и кнопка произношения того, что видно сейчас.
+    private var dailyRow: some View {
+        HStack(spacing: 12) {
+            if viewModel.idiom != nil {
+                DailyCardTabs(selection: $cardTab)
+            }
+            Spacer(minLength: 0)
+            if let speakText {
+                SpeakButton(text: speakText)
+            }
+        }
+    }
+
+    /// Текст для озвучивания: идиома на вкладке Idiom, иначе слово дня.
+    private var speakText: String? {
+        if cardTab == .phrase, let idiom = viewModel.idiom { return idiom.lemma }
+        return viewModel.dailyWord?.lemma
     }
 
     @ViewBuilder
     private var dailyWordCard: some View {
         if let word = viewModel.dailyWord {
-            WordCard(word: word, example: viewModel.dailyExample)
+            WordCard(word: word, example: viewModel.dailyExample, showsDictionaryLink: true)
         } else {
             EmptyStateView(
                 title: "No word for today",

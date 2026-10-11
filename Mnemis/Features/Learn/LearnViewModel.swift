@@ -19,7 +19,10 @@ final class LearnViewModel {
     private(set) var startedAt: Date?
     private(set) var finishedAt: Date?
 
-    private var hasStarted = false
+    /// День, на который собрана очередь: при смене дня сессия собирается заново.
+    private var queueDayID: String?
+    /// Слова, оценённые в этой сессии: повторно в очередь их не подмешиваем.
+    private var ratedIDs: Set<UUID> = []
     private var progressByWord: [UUID: WordProgress] = [:]
     private let container: AppContainer
 
@@ -31,8 +34,13 @@ final class LearnViewModel {
     var reviewedCount: Int { results.count }
     var correctCount: Int { results.filter(\.isCorrect).count }
     var isSessionFinished: Bool { reviewedCount > 0 && queue.isEmpty }
-    /// Сколько повторений осталось в очереди: у них есть прогресс, у новых слов его нет.
-    var remainingReviewCount: Int { queue.filter { progressByWord[$0.id] != nil }.count }
+    /// Повторение — слово, которое уже оценивали. Не начатое и отправленное в колоду вручную слово считается новым.
+    private static func isReview(_ progress: WordProgress) -> Bool {
+        progress.correctCount + progress.incorrectCount > 0 || progress.repetitionCount > 0
+    }
+
+    /// Сколько повторений осталось в очереди.
+    var remainingReviewCount: Int { queue.filter { progressByWord[$0.id].map(Self.isReview) ?? false }.count }
     var remainingNewCount: Int { queue.count - remainingReviewCount }
 
     var accuracyPercent: Int {
@@ -45,14 +53,36 @@ final class LearnViewModel {
         return String(format: "%d:%02d", seconds / 60, seconds % 60)
     }
 
-    /// Запускает сессию один раз. Возврат на вкладку не сбрасывает прогресс сессии,
+    /// Собирает сессию на текущий день. В пределах дня возврат на вкладку не сбрасывает прогресс сессии,
     /// но слова в очереди перечитываются: правка перевода в Words сразу видна в сессии.
+    /// Когда день сменился, сессия собирается заново: вчерашняя очередь и результаты не переносятся.
     func startIfNeeded() {
-        guard !hasStarted else {
-            refreshQueuedWords()
+        guard queueDayID == todayID else {
+            start()
             return
         }
-        start()
+        refreshQueuedWords()
+        appendNewlyDue()
+    }
+
+    /// Слова, отправленные в колоду вручную (карточка слова), попадают в идущую сессию без сброса результатов.
+    private func appendNewlyDue() {
+        guard let due = try? container.progress.due(at: container.clock.now) else { return }
+        let queued = Set(queue.map(\.id))
+        let fresh = due.filter { !queued.contains($0.wordID) && !ratedIDs.contains($0.wordID) }
+        guard !fresh.isEmpty,
+              let words = try? container.words.words(ids: fresh.map(\.wordID)) else { return }
+        let byID = Dictionary(words.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let added = fresh.compactMap { byID[$0.wordID] }
+        guard !added.isEmpty else { return }
+        for item in fresh { progressByWord[item.wordID] = item }
+        queue.append(contentsOf: added)
+        totalCount += added.count
+        let addedReviews = fresh.filter(Self.isReview).count
+        reviewCount += addedReviews
+        newCount += added.count - addedReviews
+        finishedAt = nil
+        loadCurrentDetails()
     }
 
     /// Обновляет слова очереди из базы, сохраняя порядок. Удалённые слова выпадают из очереди.
@@ -66,9 +96,6 @@ final class LearnViewModel {
     }
 
     func restart() {
-        sessionID = UUID()
-        results = []
-        finishedAt = nil
         start(extraNewWords: 3)
     }
 
@@ -78,6 +105,7 @@ final class LearnViewModel {
             try container.submitReview.execute(wordID: word.id, rating: rating, sessionID: sessionID)
             queue.removeFirst()
             results.append(rating)
+            ratedIDs.insert(word.id)
             if queue.isEmpty { finishedAt = container.clock.now }
             loadCurrentDetails()
         } catch {
@@ -116,8 +144,17 @@ final class LearnViewModel {
         return "\(Int((days / 30).rounded()))mo"
     }
 
+    /// Идентификатор текущего дня: по нему видно, что очередь собрана на вчера.
+    private var todayID: String {
+        LocalDay.id(for: container.clock.now, calendar: container.clock.calendar)
+    }
+
     private func start(extraNewWords: Int = 0) {
-        hasStarted = true
+        sessionID = UUID()
+        results = []
+        ratedIDs = []
+        finishedAt = nil
+        queueDayID = todayID
         do {
             let settings = try container.settings.load()
             let calendar = container.clock.calendar
@@ -136,8 +173,8 @@ final class LearnViewModel {
             progressByWord = Dictionary(dueProgress.map { ($0.wordID, $0) }, uniquingKeysWith: { first, _ in first })
             queue = snapshot.queue
             totalCount = queue.count
-            let dueIDs = Set(dueProgress.map(\.wordID))
-            reviewCount = queue.filter { dueIDs.contains($0.id) }.count
+            let reviewIDs = Set(dueProgress.filter(Self.isReview).map(\.wordID))
+            reviewCount = queue.filter { reviewIDs.contains($0.id) }.count
             newCount = queue.count - reviewCount
             nextReviewDate = try container.progress.nextReviewDate(after: now)
             dueSoonCount = try container.progress.countScheduled(after: now, before: now.addingTimeInterval(86_400))

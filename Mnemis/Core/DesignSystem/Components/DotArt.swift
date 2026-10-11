@@ -225,27 +225,26 @@ extension LearningStatus {
     }
 }
 
-/// Тумблер со светящейся ручкой: свечение — единственный источник света в интерфейсе.
-struct GlowToggleStyle: ToggleStyle {
+/// Тумблер без свечения (холст: Controls). Состояние читается заливкой: включён — сплошной зелёный
+/// трек с тёмной ручкой справа; выключен — контур и серая ручка слева.
+struct MnemisToggleStyle: ToggleStyle {
     func makeBody(configuration: Configuration) -> some View {
         Button {
-            withAnimation(.snappy(duration: 0.2)) { configuration.isOn.toggle() }
+            withAnimation(.snappy(duration: 0.22)) { configuration.isOn.toggle() }
         } label: {
-            HStack {
+            HStack(spacing: 12) {
                 configuration.label
                 Spacer(minLength: 12)
                 ZStack(alignment: configuration.isOn ? .trailing : .leading) {
-                    Capsule().fill(AppColor.hairline).frame(width: 56, height: 32)
+                    Capsule()
+                        .fill(configuration.isOn ? AppColor.fill : .clear)
+                        .overlay(Capsule().stroke(configuration.isOn ? .clear : AppColor.faint, lineWidth: 1.5))
                     Circle()
-                        .fill(configuration.isOn
-                              ? AnyShapeStyle(RadialGradient(colors: [Color(light: 0xE9FFE9, dark: 0xE9FFE9), AppColor.fill], center: .init(x: 0.4, y: 0.38), startRadius: 0, endRadius: 16))
-                              : AnyShapeStyle(AppColor.toggleOff))
-                        .frame(width: 26, height: 26)
-                        .shadow(color: configuration.isOn ? AppColor.glow.opacity(0.8) : .clear, radius: 8)
-                        .padding(.horizontal, 3)
+                        .fill(configuration.isOn ? AppColor.onFill : AppColor.ash)
+                        .frame(width: 21, height: 21)
+                        .padding(.horizontal, 4.5)
                 }
-                .glassCapsule()
-                .frame(width: 56, height: 32)
+                .frame(width: 52, height: 30)
             }
             .contentShape(Rectangle())
         }

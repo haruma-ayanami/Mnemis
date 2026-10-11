@@ -7,8 +7,8 @@ enum AppColor {
     static let surface = Color(light: 0xFFFFFF, dark: 0x141416)
     static let ink = Color(light: 0x111113, dark: 0xF2F2F0)
     static let ash = Color(light: 0x4F4F4A, dark: 0xA3A3A0)
-    static let smoke = Color(light: 0x66665F, dark: 0x8F8F8C)
-    static let faint = Color(light: 0xA6A69F, dark: 0x5C5C5A)
+    static let smoke = Color(light: 0x66665F, dark: 0x9A9A97)
+    static let faint = Color(light: 0x85857E, dark: 0x6E6E6B)
 
     /// Зелёный для текста и значков: Moss на светлом, Phosphor на тёмном.
     static let accent = Color(light: 0x157A40, dark: 0x4CE38A)
@@ -39,7 +39,7 @@ enum AppColor {
     static let toggleOff = Color(light: 0xD6D6D0, dark: 0x3A3A3C)
 
     // Шкала памяти: чем лучше слово запомнено, тем контрастнее точка.
-    static let statusLearning = Color(light: 0xC9C9C2, dark: 0x5C5C5A)
-    static let statusReviewing = Color(light: 0x8A8A83, dark: 0xA3A3A0)
+    static let statusLearning = Color(light: 0x898982, dark: 0x6E6E6B)
+    static let statusReviewing = Color(light: 0x5E5E58, dark: 0xA3A3A0)
     static let statusRemembered = Color(light: 0x1A1A1B, dark: 0xF2F2F0)
 }

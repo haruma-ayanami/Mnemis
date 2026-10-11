@@ -245,7 +245,7 @@ private struct OptionButton: View {
                 .padding(.horizontal, 16)
                 .background(background, in: .rect(cornerRadius: 22))
                 .overlay(RoundedRectangle(cornerRadius: 22).stroke(stroke, lineWidth: state == .idle ? 1 : 1.5))
-                .opacity(state == .dimmed ? 0.4 : 1)
+                .opacity(state == .dimmed ? 0.62 : 1)
         }
         .buttonStyle(PressScaleStyle())
         .disabled(state != .idle)

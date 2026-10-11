@@ -1,10 +1,43 @@
 import SwiftUI
 
 /// Панель вкладок из холста: стеклянная капсула 66 pt, пять пунктов по 68 pt, активный — серая подложка и точка.
+/// Свёрнутая: круг у правого края с иконкой текущей вкладки (холст: Words · scrolled). Тап раскрывает её.
 struct MnemisTabBar: View {
     @Binding var selection: AppTab
+    var folded: Bool
+    var onUnfold: () -> Void
 
     var body: some View {
+        HStack(spacing: 0) {
+            if folded { Spacer(minLength: 0) }
+            capsule
+        }
+        .padding(.horizontal, 14)
+        .padding(.bottom, 22)
+        .animation(Motion.fold, value: folded)
+    }
+
+    private var capsule: some View {
+        ZStack {
+            fullBar
+                .fixedSize()
+                .opacity(folded ? 0 : 1)
+                .allowsHitTesting(!folded)
+            foldedButton
+                .opacity(folded ? 1 : 0)
+                .allowsHitTesting(folded)
+        }
+        .padding(.horizontal, 7)
+        .frame(maxWidth: folded ? 66 : CGFloat.infinity)
+        .frame(height: 66)
+        .glassPanel()
+        // Тонировка одинаковая у полной панели и у круга: тёмная подложка под стеклом, чтобы текст за панелью не просвечивал.
+        .background {
+            Capsule().fill(AppColor.surface.opacity(0.92))
+        }
+    }
+
+    private var fullBar: some View {
         HStack(spacing: 0) {
             ForEach(AppTab.allCases, id: \.self) { tab in
                 let selected = selection == tab
@@ -34,11 +67,19 @@ struct MnemisTabBar: View {
                 .accessibilityAddTraits(selected ? [.isSelected] : [])
             }
         }
-        .padding(.horizontal, 7)
-        .frame(height: 66)
-        .glassCapsule()
-        .padding(.horizontal, 14)
-        .padding(.bottom, 22)
+    }
+
+    private var foldedButton: some View {
+        Button(action: onUnfold) {
+            Image(systemName: selection.symbol)
+                .font(.system(size: 20, weight: .regular))
+                .foregroundStyle(AppColor.ink)
+                .frame(width: 52, height: 54)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(PressScaleStyle())
+        .accessibilityLabel(Text(selection.title))
+        .accessibilityHint(Text("Shows the tab bar"))
     }
 }
 

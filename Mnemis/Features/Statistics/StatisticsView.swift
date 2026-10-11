@@ -4,8 +4,10 @@ import SwiftUI
 struct StatisticsView: View {
     @State private var viewModel: StatisticsViewModel
     @Namespace private var pill
+    private let container: AppContainer
 
     init(container: AppContainer) {
+        self.container = container
         _viewModel = State(initialValue: StatisticsViewModel(container: container))
     }
 
@@ -19,6 +21,7 @@ struct StatisticsView: View {
             }
         }
         .onAppear { viewModel.load() }
+        .onChange(of: container.router.refreshRequest) { _, _ in viewModel.load() }
     }
 
     private var content: some View {
@@ -31,10 +34,11 @@ struct StatisticsView: View {
                 headline.screenEntrance(delay: 0.04)
                 heatmap.screenEntrance(delay: 0.08)
 
-                HStack(spacing: 10) {
+                // Плитки одной высоты: самая высокая задаёт ряд (подпись уровня может перенестись на вторую строку).
+                HStack(alignment: .top, spacing: 10) {
                     StatTile(title: "streak · longest", text: "\(viewModel.currentStreak)", secondary: " / \(viewModel.longestStreak)")
                     StatTile(title: "reviews", text: viewModel.reviewCount.formatted())
-                    StatTile(title: "level", text: viewModel.cefrLevel.rawValue, secondary: " · \(viewModel.cefrPercent)%")
+                    LevelTile(level: viewModel.cefrLevel, percent: viewModel.cefrPercent)
                 }
                 .screenEntrance(delay: 0.12)
 
@@ -43,6 +47,7 @@ struct StatisticsView: View {
             .padding(.horizontal, 20)
             .padding(.bottom, 24)
         }
+        .foldsTabBarOnScroll(container.router)
         .scrollIndicators(.hidden)
     }
 
@@ -52,7 +57,7 @@ struct StatisticsView: View {
                 Button { withAnimation(Motion.swap) { viewModel.period = period } } label: {
                     Text(period.rawValue)
                         .font(.system(size: 14, weight: .medium, design: .monospaced))
-                        .frame(maxWidth: .infinity, minHeight: 36)
+                        .frame(maxWidth: .infinity, minHeight: 38)
                         .foregroundStyle(viewModel.period == period ? AppColor.ink : AppColor.ash)
                         .background {
                             if viewModel.period == period {
@@ -185,5 +190,40 @@ private struct HeatDot: View {
         Circle()
             .fill(level == 0 ? AppColor.hairline : AppColor.fill.opacity([0, 0.3, 0.55, 0.8, 1][min(level, 4)]))
             .shadow(color: level == 4 ? AppColor.glow.opacity(0.8) : .clear, radius: 3)
+    }
+}
+
+/// Плитка уровня (холст: Statistics): «B1 → B2», полоса прогресса и доля освоенных слов текущего уровня.
+private struct LevelTile: View {
+    let level: LanguageLevel
+    let percent: Int
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
+                Text(level.rawValue)
+                if let next = level.next {
+                    Text("→").foregroundStyle(AppColor.accent)
+                    Text(next.rawValue)
+                }
+            }
+            .font(.system(size: 18, weight: .medium, design: .monospaced))
+            .foregroundStyle(AppColor.ink)
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(AppColor.track)
+                    Capsule().fill(AppColor.fill)
+                        .frame(width: geometry.size.width * CGFloat(min(max(percent, 0), 100)) / 100)
+                }
+            }
+            .frame(height: 4)
+            Text("\(percent)% · CEFR level")
+                .font(.system(size: 12))
+                .foregroundStyle(AppColor.ash)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .padding(14)
+        .glassCard(cornerRadius: 22)
+        .accessibilityElement(children: .combine)
     }
 }

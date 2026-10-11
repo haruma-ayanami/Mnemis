@@ -4,13 +4,17 @@ import SwiftUI
 /// Лишнюю часть речи убирают кнопкой × у её поля; очищенное поле тоже не сохраняется.
 struct EditWordView: View {
     let viewModel: WordDetailsViewModel
+    /// Вызывается после удаления: карточка закрывается вместе с формой.
+    var onDeleted: () -> Void = {}
     @Environment(\.dismiss) private var dismiss
+    @State private var confirmsDeletion = false
     @State private var meanings: [WordMeaning]
     @State private var definition: String
     @State private var ipa: String
 
-    init(viewModel: WordDetailsViewModel) {
+    init(viewModel: WordDetailsViewModel, onDeleted: @escaping () -> Void = {}) {
         self.viewModel = viewModel
+        self.onDeleted = onDeleted
         let all = viewModel.word.allMeanings
         _meanings = State(initialValue: all.isEmpty ? [WordMeaning(partOfSpeech: viewModel.word.partOfSpeech ?? "", translation: "")] : all)
         _definition = State(initialValue: viewModel.word.definition ?? "")
@@ -54,6 +58,13 @@ struct EditWordView: View {
                     }
                     LabeledField(label: "[ definition ]", placeholder: "definition", text: $definition, multiline: true)
                     LabeledField(label: "[ ipa ]", placeholder: "/ˈsɛrənˌdɪpɪti/", text: $ipa, mono: true)
+                    if viewModel.word.isIdiom, viewModel.word.origin == .user {
+                        Button(role: .destructive) { confirmsDeletion = true } label: {
+                            Text("Delete idiom").font(.system(size: 15, weight: .medium)).frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(QuietButtonStyle())
+                        .padding(.top, 8)
+                    }
                 }
                 .padding(.vertical, 8)
             }
@@ -64,6 +75,14 @@ struct EditWordView: View {
         .background(AppColor.background.ignoresSafeArea())
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
+        .confirmationDialog("Delete this idiom?", isPresented: $confirmsDeletion, titleVisibility: .visible) {
+            Button("Delete idiom", role: .destructive) {
+                if viewModel.delete() {
+                    dismiss()
+                    onDeleted()
+                }
+            }
+        }
     }
 
     private func label(for meaning: WordMeaning) -> LocalizedStringKey {

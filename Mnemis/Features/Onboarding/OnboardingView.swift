@@ -293,7 +293,7 @@ private struct PaceStep: View {
                             .foregroundStyle(AppColor.smoke)
                     }
                 }
-                .toggleStyle(GlowToggleStyle())
+                .toggleStyle(MnemisToggleStyle())
                 .padding(.horizontal, 20).padding(.vertical, 14)
                 .glassCard(cornerRadius: 24)
                 .padding(.top, 14)

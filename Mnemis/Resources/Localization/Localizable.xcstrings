@@ -7,6 +7,9 @@
     "—" : {
 
     },
+    "· %@" : {
+
+    },
     "· %lld cards" : {
 
     },
@@ -22,6 +25,9 @@
     "[ activity · 12 weeks ]" : {
 
     },
+    "[ add to study ]" : {
+
+    },
     "[ daily pace ]" : {
 
     },
@@ -32,6 +38,9 @@
 
     },
     "[ examples ]" : {
+
+    },
+    "[ fill the gap ]" : {
 
     },
     "[ idiom · english ]" : {
@@ -64,6 +73,12 @@
     "[ notifications ]" : {
 
     },
+    "[ practice ]" : {
+
+    },
+    "[ practice done ]" : {
+
+    },
     "[ review ]" : {
 
     },
@@ -86,6 +101,12 @@
 
     },
     "[ vocabulary ]" : {
+
+    },
+    "[ what does it mean? ]" : {
+
+    },
+    "[ which word? ]" : {
 
     },
     "[ word · english ]" : {
@@ -113,6 +134,19 @@
         }
       }
     },
+    "%@ / %@ · %lld right" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ / %2$@ · %3$lld right"
+          }
+        }
+      }
+    },
+    "%@ results" : {
+
+    },
     "%lld" : {
 
     },
@@ -129,10 +163,29 @@
         }
       }
     },
+    "%lld of %lld right" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld of %2$lld right"
+          }
+        }
+      }
+    },
+    "%lld questions" : {
+
+    },
+    "%lld sources · attribution required" : {
+
+    },
     "%lld words, done." : {
 
     },
     "%lld%%" : {
+
+    },
+    "%lld%% · CEFR level" : {
 
     },
     "^[%lld day](inflect: true)" : {
@@ -145,6 +198,9 @@
 
     },
     "+%lld" : {
+
+    },
+    "+1 card" : {
 
     },
     "~%lld min" : {
@@ -174,9 +230,6 @@
     "┘" : {
 
     },
-    "▮▯▯▯▯" : {
-
-    },
     "▸" : {
 
     },
@@ -187,6 +240,12 @@
 
     },
     "✓" : {
+
+    },
+    "1 question" : {
+
+    },
+    "4 options" : {
 
     },
     "22:00 – 08:00" : {
@@ -208,9 +267,6 @@
 
     },
     "Account" : {
-
-    },
-    "Account & data" : {
 
     },
     "accuracy" : {
@@ -282,9 +338,6 @@
     "Back" : {
 
     },
-    "Back to Idioms" : {
-
-    },
     "Back to learning" : {
 
     },
@@ -301,6 +354,9 @@
 
     },
     "break the ice" : {
+
+    },
+    "Built-in entries can't be deleted." : {
 
     },
     "Cancel" : {
@@ -322,10 +378,16 @@
     "cards" : {
 
     },
+    "Cards" : {
+
+    },
     "change any time in Settings → Notifications" : {
 
     },
     "Clear search" : {
+
+    },
+    "contains" : {
 
     },
     "Continue" : {
@@ -349,6 +411,9 @@
     "Dark" : {
 
     },
+    "Data" : {
+
+    },
     "definition" : {
 
     },
@@ -361,10 +426,10 @@
     "Delete account?" : {
 
     },
-    "Delete example" : {
+    "Delete idiom" : {
 
     },
-    "Delete idiom" : {
+    "Delete this idiom?" : {
 
     },
     "Done" : {
@@ -376,13 +441,16 @@
     "Edit" : {
 
     },
-    "Edit idiom" : {
-
-    },
     "Elementary" : {
 
     },
     "EN" : {
+
+    },
+    "EN → RU" : {
+
+    },
+    "End practice" : {
 
     },
     "End session" : {
@@ -397,6 +465,15 @@
     "ex." : {
 
     },
+    "EXACT" : {
+
+    },
+    "exact match first · then starts with · then contains" : {
+
+    },
+    "exercises" : {
+
+    },
     "Fetch details from sources" : {
 
     },
@@ -404,6 +481,9 @@
 
     },
     "First everyday words" : {
+
+    },
+    "first review tomorrow · tap to undo" : {
 
     },
     "Found in Wiktionary · CC BY-SA" : {
@@ -439,22 +519,19 @@
     "I know" : {
 
     },
-    "I know it" : {
-
-    },
     "I know this" : {
-
-    },
-    "idiom" : {
 
     },
     "Idiom" : {
 
     },
+    "Idiom of the day" : {
+
+    },
     "Idioms" : {
 
     },
-    "Idioms in Today" : {
+    "Idioms from the built-in list appear as new words. You can also add your own." : {
 
     },
     "in %@ · %lld words" : {
@@ -467,7 +544,23 @@
         }
       }
     },
-    "In your study list" : {
+    "in deck · %lld / %lld new · tap to undo" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "in deck · %1$lld / %2$lld new · tap to undo"
+          }
+        }
+      }
+    },
+    "In Practice" : {
+
+    },
+    "in Practice · tap to undo" : {
+
+    },
+    "In today's deck" : {
 
     },
     "Intermediate" : {
@@ -476,22 +569,16 @@
     "interval" : {
 
     },
-    "It rarely shows up as the idiom of the day." : {
-
-    },
-    "It shows up in Today as the idiom of the day." : {
-
-    },
     "Keep your streak" : {
 
     },
     "Keep your words safe" : {
 
     },
-    "known" : {
+    "Known" : {
 
     },
-    "Known" : {
+    "Known · at most one a session" : {
 
     },
     "Language" : {
@@ -506,6 +593,9 @@
     "Last synced" : {
 
     },
+    "Later" : {
+
+    },
     "Learn" : {
 
     },
@@ -518,13 +608,16 @@
     "Learn now" : {
 
     },
+    "Learn on this device" : {
+
+    },
     "Learning" : {
 
     },
-    "less" : {
+    "Learning from tomorrow" : {
 
     },
-    "level" : {
+    "less" : {
 
     },
     "Level" : {
@@ -539,7 +632,13 @@
     "local only · no account needed" : {
 
     },
+    "local-first · sign-in optional" : {
+
+    },
     "Looking up in Wiktionary…" : {
+
+    },
+    "meaning" : {
 
     },
     "Memory strength %lld of %lld" : {
@@ -558,7 +657,7 @@
     "mnemis" : {
 
     },
-    "mnemis 0.2 · local-first · sign-in optional" : {
+    "Mnemis 0.2" : {
 
     },
     "more" : {
@@ -585,7 +684,13 @@
     "New words" : {
 
     },
+    "New words a day" : {
+
+    },
     "New words per day" : {
+
+    },
+    "Next" : {
 
     },
     "next review" : {
@@ -618,6 +723,18 @@
     "Not now" : {
 
     },
+    "Not started" : {
+
+    },
+    "not started · extra idioms are fine" : {
+
+    },
+    "not started · extra words are fine" : {
+
+    },
+    "note" : {
+
+    },
     "Nothing found" : {
 
     },
@@ -627,10 +744,10 @@
     "nothing scheduled yet" : {
 
     },
-    "Notifications" : {
+    "Nothing to practice yet" : {
 
     },
-    "Notifications & sound" : {
+    "Notifications" : {
 
     },
     "Notifications are blocked in system settings. Allow them there to receive reminders." : {
@@ -654,10 +771,22 @@
     "only if you skipped today" : {
 
     },
+    "Open in Dictionary" : {
+
+    },
     "Optional. Sync your words, notes and progress between your devices." : {
 
     },
+    "Pick the right answer" : {
+
+    },
     "Play pronunciation" : {
+
+    },
+    "Practice" : {
+
+    },
+    "Practice doesn't change your schedule. Cards in Learn do." : {
 
     },
     "Preview" : {
@@ -684,7 +813,13 @@
     "Remembered" : {
 
     },
+    "Remembered · sometimes" : {
+
+    },
     "Remind me in 1 hour" : {
+
+    },
+    "Reminders & sound" : {
 
     },
     "Remove %@ meaning" : {
@@ -726,9 +861,6 @@
     "Save" : {
 
     },
-    "Save an idiom you want to remember. Its meaning comes from Wiktionary, and it shows up in Today." : {
-
-    },
     "Save note" : {
 
     },
@@ -739,6 +871,9 @@
 
     },
     "Search word, translation, note" : {
+
+    },
+    "See result" : {
 
     },
     "serendipity" : {
@@ -756,10 +891,19 @@
     "Show answer for %@" : {
 
     },
+    "shown in Today" : {
+
+    },
+    "Shows the tab bar" : {
+
+    },
     "sign in" : {
 
     },
     "Sign in" : {
+
+    },
+    "sign in is optional" : {
 
     },
     "Sign in to back up your words and sync them between your devices. Learning works fully offline either way." : {
@@ -783,7 +927,19 @@
     "Something went wrong" : {
 
     },
+    "Sources" : {
+
+    },
+    "Sources & licenses" : {
+
+    },
     "src" : {
+
+    },
+    "Start learning a few words in Cards. Practice uses the words you are learning." : {
+
+    },
+    "Start practice" : {
 
     },
     "Start session" : {
@@ -792,13 +948,16 @@
     "Start session, %lld cards" : {
 
     },
+    "starts with" : {
+
+    },
     "Statistics" : {
 
     },
-    "Step %lld of 3" : {
+    "Stats" : {
 
     },
-    "Still learning" : {
+    "Step %lld of 3" : {
 
     },
     "streak · longest" : {
@@ -819,6 +978,12 @@
     "Sync" : {
 
     },
+    "sync off" : {
+
+    },
+    "sync on" : {
+
+    },
     "Sync words & progress" : {
 
     },
@@ -826,9 +991,6 @@
 
     },
     "tap to start →" : {
-
-    },
-    "This idiom is already in your list." : {
 
     },
     "This week" : {
@@ -847,6 +1009,9 @@
 
     },
     "Today's new words are done and nothing is due. Rest helps memory too." : {
+
+    },
+    "tomorrow" : {
 
     },
     "translation" : {
@@ -876,9 +1041,6 @@
     "Where do you start?" : {
 
     },
-    "Where you heard it, how to use it" : {
-
-    },
     "Word" : {
 
     },
@@ -900,10 +1062,16 @@
     "words on this device stay after sign-out or deletion." : {
 
     },
+    "Words you are learning come back as meanings, gaps in sentences and reverse questions." : {
+
+    },
+    "Words, definitions, translations and idioms come from open dictionaries. Their licenses require attribution." : {
+
+    },
     "Work, travel, opinions" : {
 
     },
-    "Write the idiom." : {
+    "Write the word or idiom." : {
 
     },
     "you" : {

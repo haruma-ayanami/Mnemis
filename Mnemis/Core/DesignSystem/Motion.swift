@@ -8,6 +8,8 @@ enum Motion {
     static let swap = Animation.spring(response: 0.42, dampingFraction: 0.9)
     /// Скрытие и показ панели вкладок.
     static let chrome = Animation.smooth(duration: 0.45)
+    /// Сворачивание панели в круг при прокрутке и раскрытие обратно.
+    static let fold = Animation.spring(response: 0.4, dampingFraction: 0.86)
     /// С Reduce Motion — только короткое затухание.
     static let reduced = Animation.easeInOut(duration: 0.2)
 }

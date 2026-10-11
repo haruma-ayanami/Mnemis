@@ -28,7 +28,7 @@ struct DailyCardTabs: View {
                     Text(tab.title)
                         .font(.system(size: 13, weight: .medium, design: .monospaced))
                         .foregroundStyle(selected ? AppColor.ink : AppColor.ash)
-                        .padding(.horizontal, 14).frame(minHeight: 32)
+                        .frame(width: 68, height: 28)
                         .background {
                             if selected {
                                 Capsule().fill(AppColor.glassLine).matchedGeometryEffect(id: "daily-pill", in: pill)
@@ -41,6 +41,5 @@ struct DailyCardTabs: View {
         }
         .padding(3)
         .background(AppColor.track, in: .capsule)
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

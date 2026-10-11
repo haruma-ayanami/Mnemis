@@ -11,6 +11,9 @@ final class WordDetailsViewModel {
     private(set) var message: String?
     private(set) var isEnriching = false
     private(set) var errorMessage: String?
+    /// Сколько новых слов начато сегодня и дневной лимит: для подсказки «6 / 5 new».
+    private(set) var newToday = 0
+    private(set) var newLimit = 5
 
     private let container: AppContainer
     private let onChange: () -> Void
@@ -24,11 +27,19 @@ final class WordDetailsViewModel {
 
     var status: LearningStatus { progress?.status ?? .new }
 
+    /// Показывать выбор «Today / Practice / Later»: слово или идиома не начаты либо размещены вручную и не повторялись.
+    var canPlace: Bool { LearningRules.canPlace(progress) }
+
+    var placement: StudyPlacement? { LearningRules.placement(of: progress, now: container.clock.now) }
+
     func reload() {
         do {
             word = try container.words.word(id: word.id) ?? word
             progress = try container.progress.progress(forWordID: word.id)
             examples = try container.words.examples(forWordID: word.id)
+            let now = container.clock.now
+            newToday = try container.progress.countIntroduced(since: LocalDay.start(of: now, calendar: container.clock.calendar))
+            newLimit = try container.settings.load().newWordsPerDay
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -38,6 +49,21 @@ final class WordDetailsViewModel {
     func restoreToLearning() { perform { try container.wordStatus.restoreToLearning(wordID: word.id) } }
     func suspend() { perform { try container.wordStatus.suspend(wordID: word.id) } }
     func resume() { perform { try container.wordStatus.resume(wordID: word.id) } }
+    /// Выбор плитки: повторное нажатие на выбранную отменяет размещение.
+    func togglePlacement(_ target: StudyPlacement) {
+        let remove = placement == target
+        perform {
+            if remove {
+                try container.wordStatus.removeFromStudy(wordID: word.id)
+            } else {
+                try container.wordStatus.place(wordID: word.id, as: target)
+            }
+            // Today и Learn пересчитывают счётчики и очередь.
+            container.router.requestRefresh()
+        }
+    }
+
+    func setStatus(_ status: LearningStatus) { perform { try container.wordStatus.setStatus(wordID: word.id, to: status) } }
 
     /// Удаляет слово или идиому пользователя. Возвращает `true`, если удаление прошло.
     func delete() -> Bool {

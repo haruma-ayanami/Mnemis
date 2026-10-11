@@ -118,6 +118,12 @@ struct ProgressRepository {
         }
     }
 
+    /// Слово снова не начато: возвращается в очередь новых слов.
+    func markWordNotStarted(_ wordID: UUID) throws {
+        let word = try context.fetch(FetchDescriptor<WordEntity>(predicate: #Predicate { $0.id == wordID })).first
+        word?.isStarted = false
+    }
+
     /// Слово начато: оно уходит из очереди новых слов. Флаг на слове позволяет не читать весь прогресс.
     func markWordStarted(_ wordID: UUID) throws {
         let word = try context.fetch(FetchDescriptor<WordEntity>(predicate: #Predicate { $0.id == wordID })).first

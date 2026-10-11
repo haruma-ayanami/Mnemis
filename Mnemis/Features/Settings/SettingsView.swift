@@ -31,6 +31,7 @@ struct SettingsView: View {
                     }
                     .padding(.horizontal, 20).padding(.bottom, 32)
                 }
+                .foldsTabBarOnScroll(container.router)
                 .scrollIndicators(.hidden)
             }
             .mnemisNavigationBarHidden()
@@ -49,11 +50,14 @@ struct SettingsView: View {
     /// Профиль сверху: вход необязателен, без него всё работает на устройстве.
     private var profileCard: some View {
         NavigationLink {
-            if container.account.session == nil {
-                AccountLoginView(container: container)
-            } else {
-                AccountProfileView(container: container)
+            Group {
+                if container.account.session == nil {
+                    AccountLoginView(container: container)
+                } else {
+                    AccountProfileView(container: container)
+                }
             }
+            .hidesTabBar(container.router)
         } label: {
             HStack(spacing: 14) {
                 ZStack {
@@ -101,11 +105,11 @@ struct SettingsView: View {
 
     private var learningGroup: some View {
         SettingsGroup(title: "Learning") {
-            SettingsRow(icon: "character.book.closed", tint: AppColor.fill, title: "Language") {
+            SettingsRow(icon: "character.book.closed", tint: AppColor.fill, glyph: AppColor.onFill, title: "Language") {
                 Text("EN → RU").font(.system(size: 14, design: .monospaced)).foregroundStyle(AppColor.ash)
             }
             SettingsDivider()
-            SettingsRow(icon: "chart.bar", tint: AppColor.fill, title: "Level") {
+            SettingsRow(icon: "chart.bar", tint: AppColor.fill, glyph: AppColor.onFill, title: "Level") {
                 Menu {
                     Picker("Level", selection: Binding(get: { viewModel.settings.proficiencyLevel }, set: { viewModel.setLevel($0) })) {
                         ForEach(LanguageLevel.allCases) { Text($0.rawValue).tag($0) }
@@ -115,7 +119,7 @@ struct SettingsView: View {
                 }
             }
             SettingsDivider()
-            SettingsRow(icon: "plus.circle", tint: AppColor.fill, title: "New words a day") {
+            SettingsRow(icon: "plus.circle", tint: AppColor.fill, glyph: AppColor.onFill, title: "New words a day") {
                 HStack(spacing: 10) {
                     Text(String(format: "%02d", viewModel.settings.newWordsPerDay))
                         .font(.system(size: 15, weight: .medium, design: .monospaced)).foregroundStyle(AppColor.ink)
@@ -127,9 +131,9 @@ struct SettingsView: View {
                 }
             }
             SettingsDivider()
-            SettingsRow(icon: "text.quote", tint: AppColor.fill, title: "Idiom of the day", subtitle: "shown in Today") {
+            SettingsRow(icon: "text.quote", tint: AppColor.fill, glyph: AppColor.onFill, title: "Idiom of the day", subtitle: "shown in Today") {
                 Toggle(isOn: Binding(get: { viewModel.settings.phrasesInToday }, set: { viewModel.setPhrasesInToday($0) })) { EmptyView() }
-                    .toggleStyle(GlowToggleStyle())
+                    .toggleStyle(MnemisToggleStyle())
             }
         }
     }
@@ -138,6 +142,7 @@ struct SettingsView: View {
         SettingsGroup(title: "Reminders & sound") {
             NavigationLink {
                 NotificationSettingsView(viewModel: viewModel)
+                    .hidesTabBar(container.router)
             } label: {
                 SettingsRow(icon: "bell", tint: AppColor.glassLine, title: "Notifications") {
                     HStack(spacing: 8) {
@@ -152,7 +157,7 @@ struct SettingsView: View {
             SettingsDivider()
             SettingsRow(icon: "speaker.wave.2", tint: AppColor.glassLine, title: "Pronunciation sound") {
                 Toggle(isOn: Binding(get: { viewModel.settings.soundEnabled }, set: { viewModel.setSound($0) })) { EmptyView() }
-                    .toggleStyle(GlowToggleStyle())
+                    .toggleStyle(MnemisToggleStyle())
             }
         }
     }
@@ -195,6 +200,7 @@ struct SettingsView: View {
         SettingsGroup(title: "Data") {
             NavigationLink {
                 SourcesView(viewModel: viewModel)
+                    .hidesTabBar(container.router)
             } label: {
                 SettingsRow(icon: "doc.text", tint: AppColor.glassLine, title: "Sources & licenses") {
                     HStack(spacing: 8) {
@@ -279,8 +285,8 @@ struct SettingsDivider: View {
 struct SettingsRow<Trailing: View>: View {
     var icon: String?
     var tint: Color = AppColor.glassLine
-    /// Цвет значка: на зелёной заливке — светлый, на сером — ink (как `--onfill` и `--ink` в холсте).
-    var glyph: Color = AppColor.onPrimary
+    /// Цвет значка: на зелёной заливке — тёмный `onFill`, на сером — `ink` (холст: `.tile-g` и `.tile-s`).
+    var glyph: Color = AppColor.ink
     let title: LocalizedStringKey
     var subtitle: LocalizedStringKey?
     @ViewBuilder var trailing: Trailing
@@ -312,14 +318,14 @@ struct SettingsRow<Trailing: View>: View {
 /// Источники данных и их лицензии. Текст лицензии раскрывается по нажатию.
 struct SourcesView: View {
     let viewModel: SettingsViewModel
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         ZStack {
             AppColor.background.ignoresSafeArea()
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
-                    Text("Sources & licenses").font(.mnemisTitle).tracking(-0.8).foregroundStyle(AppColor.ink)
-                        .padding(.top, 8)
+                    topBar
                     Text("Words, definitions, translations and idioms come from open dictionaries. Their licenses require attribution.")
                         .font(.system(size: 14)).foregroundStyle(AppColor.ash)
                     SettingsGroup(title: "Sources") {
@@ -332,7 +338,9 @@ struct SourcesView: View {
                                     .padding(.top, 6)
                             } label: {
                                 VStack(alignment: .leading, spacing: 2) {
+                                    // Перенос строки у длинного названия иначе выравнивается по центру.
                                     Text(source.name).font(.system(size: 15)).foregroundStyle(AppColor.ink)
+                                        .multilineTextAlignment(.leading)
                                     Text(source.licenseName).font(.system(size: 12, design: .monospaced)).foregroundStyle(AppColor.smoke)
                                 }
                             }
@@ -340,10 +348,23 @@ struct SourcesView: View {
                         }
                     }
                 }
-                .padding(.horizontal, 20).padding(.bottom, 32)
+                .padding(.horizontal, 20).padding(.bottom, 24)
             }
             .scrollIndicators(.hidden)
         }
         .mnemisNavigationBarHidden()
+    }
+
+    /// Назад к Настройкам: та же кнопка, что у уведомлений. Системная панель скрыта, поэтому кнопка своя.
+    private var topBar: some View {
+        HStack(spacing: 12) {
+            RoundGlassButton(systemImage: "chevron.left", label: "Back to Settings") { dismiss() }
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Sources & licenses").font(.system(size: 26, weight: .semibold)).tracking(-0.6).foregroundStyle(AppColor.ink)
+                Text("\(viewModel.sources.count) sources · attribution required")
+                    .font(.system(size: 11, design: .monospaced)).foregroundStyle(AppColor.smoke)
+            }
+        }
+        .padding(.top, 8)
     }
 }

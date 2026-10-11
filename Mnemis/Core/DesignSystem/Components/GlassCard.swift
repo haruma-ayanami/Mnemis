@@ -4,6 +4,8 @@ import SwiftUI
 /// Системный Liquid Glass на тёмном фоне светлее, поэтому здесь свой, тот же, что в дизайне.
 struct GlassSurface<S: Shape>: ViewModifier {
     let shape: S
+    /// Блик по верхнему краю. Панель вкладок его не рисует: на свёрнутом круге он выглядит полоской.
+    var showsHighlight = true
 
     func body(content: Content) -> some View {
         content.background {
@@ -17,9 +19,11 @@ struct GlassSurface<S: Shape>: ViewModifier {
                     shape.stroke(AppColor.glassLine, lineWidth: 1)
                 }
                 .overlay {
-                    // Внутренний блик по верхнему краю: `inset 0 1px 0 var(--hl)`.
-                    shape.stroke(AppColor.glassHighlight, lineWidth: 1)
-                        .mask(LinearGradient(colors: [.white, .clear], startPoint: .top, endPoint: UnitPoint(x: 0.5, y: 0.15)))
+                    if showsHighlight {
+                        // Внутренний блик по верхнему краю: `inset 0 1px 0 var(--hl)`.
+                        shape.stroke(AppColor.glassHighlight, lineWidth: 1)
+                            .mask(LinearGradient(colors: [.white, .clear], startPoint: .top, endPoint: UnitPoint(x: 0.5, y: 0.15)))
+                    }
                 }
         }
     }
@@ -33,6 +37,11 @@ extension View {
 
     func glassCapsule() -> some View {
         modifier(GlassSurface(shape: Capsule()))
+    }
+
+    /// Стекло панели вкладок: как `glassCapsule`, но без блика сверху.
+    func glassPanel() -> some View {
+        modifier(GlassSurface(shape: Capsule(), showsHighlight: false))
     }
 
     func glassCircle() -> some View {

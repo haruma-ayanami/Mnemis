@@ -121,15 +121,21 @@ struct FlashcardView: View {
                     Text(word.lemma)
                         .font(.system(size: 42, weight: .semibold)).tracking(-1.5)
                         .minimumScaleFactor(0.6).lineLimit(1)
-                    Text([word.ipa, word.meanings.count > 1 ? nil : word.partOfSpeech.map(Self.abbreviation), word.level].compactMap { $0 }.joined(separator: " · "))
+                    Text([word.ipa, word.level].compactMap { $0 }.joined(separator: " · "))
                         .font(.system(size: 15, design: .monospaced))
                         .foregroundStyle(AppColor.ash)
                 }
                 Spacer()
                 SpeakButton(text: word.lemma)
             }
-            AsciiDivider()
-            MeaningsList(meanings: word.allMeanings, primarySize: 25)
+            // Ссылка справа от разделителя (холст: Learn-Back); область нажатия 44 pt не добавляет высоты строке.
+            HStack {
+                AsciiDivider()
+                Spacer()
+                DictionaryLinkButton(term: word.lemma, fontSize: 14, minHeight: 44)
+                    .padding(.vertical, -14)
+            }
+            MeaningsList(meanings: word.allMeanings, primarySize: 25, showsLabels: true)
             if let definition = word.definition {
                 Text(definition).font(.system(size: 16)).foregroundStyle(AppColor.ash)
             }
@@ -168,17 +174,6 @@ struct FlashcardView: View {
         }
     }
 
-    private static func abbreviation(_ partOfSpeech: String) -> String {
-        switch partOfSpeech {
-        case "noun": "n"
-        case "verb": "v"
-        case "adjective": "adj"
-        case "adverb": "adv"
-        case "preposition": "prep"
-        default: partOfSpeech
-        }
-    }
-
     private func highlight(_ sentence: String) -> AttributedString {
         var text = AttributedString(sentence)
         text.foregroundColor = AppColor.ink
@@ -210,6 +205,11 @@ private struct RatingButton: View {
                 }
             }
             .modifier(RatingGlass(isEasy: rating == .easy))
+            .overlay {
+                if rating == .easy {
+                    RoundedRectangle(cornerRadius: 24).stroke(AppColor.fill, lineWidth: 1)
+                }
+            }
         }
         .buttonStyle(PressScaleStyle())
         .accessibilityLabel(Text(title))

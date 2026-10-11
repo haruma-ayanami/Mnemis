@@ -21,13 +21,20 @@ struct WordDetailsView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     topBar
                     wordHeader
-                    memoryCard
+                    if viewModel.word.isIdiom {
+                        idiomStatusCard
+                    } else if viewModel.canPlace {
+                        studyCard
+                    } else {
+                        memoryCard
+                    }
                     meaning
                     examples
                     noteSection
-                    sources
+                    if !viewModel.word.isIdiom { sources }
                     actions
-                    if viewModel.word.origin == .user {
+                    // Идиому удаляют в «Edit»: на карточке внизу те же кнопки, что у слова (холст: Idiom-Details).
+                    if viewModel.word.origin == .user, !viewModel.word.isIdiom {
                         Button(role: .destructive) {
                             if viewModel.delete() { dismiss() }
                         } label: {
@@ -45,7 +52,7 @@ struct WordDetailsView: View {
             .scrollIndicators(.hidden)
         }
         .mnemisNavigationBarHidden()
-        .sheet(isPresented: $isEditing) { EditWordView(viewModel: viewModel) }
+        .sheet(isPresented: $isEditing) { EditWordView(viewModel: viewModel, onDeleted: { dismiss() }) }
     }
 
     private var topBar: some View {
@@ -64,7 +71,7 @@ struct WordDetailsView: View {
             HStack(alignment: .bottom) {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(viewModel.word.lemma)
-                        .font(.system(size: 46, weight: .semibold)).tracking(-1.6)
+                        .font(.system(size: viewModel.word.isIdiom ? 38 : 46, weight: .semibold)).tracking(-1.6)
                         .minimumScaleFactor(0.6).lineLimit(1)
                     if let ipa = viewModel.word.ipa {
                         Text(ipa).font(.system(size: 15, design: .monospaced)).foregroundStyle(AppColor.ash)
@@ -73,7 +80,7 @@ struct WordDetailsView: View {
                 Spacer()
                 SpeakButton(text: viewModel.word.lemma)
             }
-            FlowPills(items: pills)
+            FlowPills(items: viewModel.word.isIdiom ? idiomPills : pills)
         }
         .foregroundStyle(AppColor.ink)
         .padding(.top, 6)
@@ -133,6 +140,136 @@ struct WordDetailsView: View {
         }
     }
 
+    /// Карточка не начатого слова (холст: Word-Study): плитки «Today / Practice / Later» вместо метрик.
+    private var studyCard: some View {
+        let placement = viewModel.placement
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                HStack(spacing: 8) {
+                    Group {
+                        if placement == nil {
+                            Circle().stroke(AppColor.smoke, lineWidth: 1.5)
+                        } else {
+                            Circle().fill(AppColor.fill)
+                        }
+                    }
+                    .frame(width: 10, height: 10)
+                    Text(studyTitle(placement)).font(.system(size: 16, weight: .medium))
+                }
+                Spacer()
+                MemoryBar(level: 0)
+            }
+            Text("[ add to study ]").bracketLabel()
+            HStack(spacing: 8) {
+                ForEach(StudyPlacement.allCases) { option in
+                    StudyTile(option: option, isOn: placement == option) {
+                        withAnimation(Motion.swap) { viewModel.togglePlacement(option) }
+                    }
+                }
+            }
+            Text(studyHint(placement))
+                .font(.system(size: 11, design: .monospaced))
+                .foregroundStyle(AppColor.smoke)
+        }
+        .foregroundStyle(AppColor.ink)
+        .padding(.horizontal, 26).padding(.top, 18).padding(.bottom, 20)
+        .glassCard()
+        .cornerMarks()
+    }
+
+    private func studyTitle(_ placement: StudyPlacement?) -> LocalizedStringKey {
+        switch placement {
+        case nil: "Not started"
+        case .today?: "In today's deck"
+        case .practice?: "In Practice"
+        case .later?: "Learning from tomorrow"
+        }
+    }
+
+    private func studyHint(_ placement: StudyPlacement?) -> String {
+        switch placement {
+        case nil: String(localized: "not started · extra words are fine")
+        case .today?: String(localized: "in deck · \(viewModel.newToday) / \(viewModel.newLimit) new · tap to undo")
+        case .practice?: String(localized: "in Practice · tap to undo")
+        case .later?: String(localized: "first review tomorrow · tap to undo")
+        }
+    }
+
+    private var idiomPills: [String] {
+        var result = ["idiom", viewModel.status.rawValue]
+        if viewModel.word.origin == .user { result.append("yours") }
+        return result
+    }
+
+    /// Карточка статуса идиомы (холст: Idiom-Study): этап, плитки «Today / Practice / Later» пока идиому не повторяли
+    /// и метрики, когда она уже в изучении.
+    private var idiomStatusCard: some View {
+        let placement = viewModel.placement
+        let showsTiles = viewModel.canPlace
+        let showsMetrics = viewModel.status != .new && placement == nil
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                HStack(spacing: 8) {
+                    Group {
+                        if placement != nil || viewModel.status == .known {
+                            Circle().fill(AppColor.fill)
+                        } else {
+                            Circle().stroke(AppColor.smoke, lineWidth: 1.5)
+                        }
+                    }
+                    .frame(width: 10, height: 10)
+                    idiomTitle(placement).font(.system(size: 16, weight: .medium))
+                }
+                Spacer()
+                if viewModel.status == .known {
+                    Text("✓").font(.system(size: 13, design: .monospaced)).foregroundStyle(AppColor.accent)
+                }
+            }
+            IdiomStageSwitch(selection: viewModel.status) { viewModel.setStatus($0) }
+            if showsTiles {
+                Text("[ add to study ]").bracketLabel()
+                HStack(spacing: 8) {
+                    ForEach(StudyPlacement.allCases) { option in
+                        StudyTile(option: option, isOn: placement == option) {
+                            withAnimation(Motion.swap) { viewModel.togglePlacement(option) }
+                        }
+                    }
+                }
+            }
+            if showsMetrics {
+                HStack {
+                    metric(nextText, "next review")
+                    metric(intervalText, "interval")
+                    metric("\(viewModel.progress?.correctCount ?? 0) / \(viewModel.progress?.incorrectCount ?? 0)", "right / wrong")
+                }
+            }
+            Text(placement == nil ? idiomHint : studyHint(placement))
+                .font(.system(size: viewModel.status == .new || placement != nil ? 11 : 12, design: .monospaced))
+                .foregroundStyle(AppColor.smoke)
+        }
+        .foregroundStyle(AppColor.ink)
+        .padding(.horizontal, 26).padding(.vertical, 20)
+        .glassCard()
+        .cornerMarks()
+    }
+
+    private func idiomTitle(_ placement: StudyPlacement?) -> Text {
+        if let placement { return Text(studyTitle(placement)) }
+        return viewModel.status == .known ? Text("You know this idiom") : Text(statusTitle)
+    }
+
+    private var idiomHint: String {
+        let days = Int((viewModel.progress?.intervalDays ?? 0).rounded())
+        switch viewModel.status {
+        case .new: return String(localized: "not started · extra idioms are fine")
+        case .learning: return days <= 1 ? "still learning · back tomorrow" : "still learning · back in \(days) d"
+        case .reviewing: return "recalled sometimes · next in \(days) d"
+        case .remembered: return "known well · next in \(days) d"
+        case .known: return "known · rarely comes back"
+        case .suspended: return "suspended · not in the queue"
+        }
+    }
+
     private var nextText: String {
         guard let next = viewModel.progress?.nextReviewAt else { return "—" }
         return next.formatted(.relative(presentation: .numeric, unitsStyle: .narrow))
@@ -145,7 +282,11 @@ struct WordDetailsView: View {
 
     private var meaning: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("[ meaning ]").bracketLabel()
+            HStack {
+                Text("[ meaning ]").bracketLabel()
+                Spacer()
+                DictionaryLinkButton(term: viewModel.word.lemma)
+            }
             MeaningsList(meanings: viewModel.word.allMeanings, primarySize: 20)
             if let definition = viewModel.word.definition, !definition.isEmpty {
                 Text(definition).font(.system(size: 15)).foregroundStyle(AppColor.ash)
@@ -247,15 +388,52 @@ struct FlowPills: View {
     let items: [String]
 
     var body: some View {
-        HStack(spacing: 6) {
+        // Пилюли переносятся на следующую строку, а не обрезаются (холст: Word-Details).
+        PillFlowLayout(spacing: 6) {
             ForEach(items, id: \.self) { item in
                 Text(item)
                     .font(.system(size: 12, design: .monospaced))
                     .foregroundStyle(AppColor.ash)
+                    .lineLimit(1)
+                    .fixedSize()
                     .padding(.horizontal, 10).frame(height: 28)
                     .overlay(Capsule().stroke(AppColor.hairline))
             }
         }
+    }
+}
+
+/// Раскладка «слева направо с переносом»: следующий элемент встаёт в новую строку, если не помещается.
+private struct PillFlowLayout: Layout {
+    var spacing: CGFloat
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        arrange(in: proposal.width ?? .infinity, subviews: subviews).size
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let result = arrange(in: bounds.width, subviews: subviews)
+        for (index, origin) in result.origins.enumerated() {
+            subviews[index].place(at: CGPoint(x: bounds.minX + origin.x, y: bounds.minY + origin.y), proposal: .unspecified)
+        }
+    }
+
+    private func arrange(in width: CGFloat, subviews: Subviews) -> (origins: [CGPoint], size: CGSize) {
+        var origins: [CGPoint] = []
+        var x: CGFloat = 0, y: CGFloat = 0, rowHeight: CGFloat = 0, maxX: CGFloat = 0
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            if x > 0, x + size.width > width {
+                x = 0
+                y += rowHeight + spacing
+                rowHeight = 0
+            }
+            origins.append(CGPoint(x: x, y: y))
+            x += size.width + spacing
+            rowHeight = max(rowHeight, size.height)
+            maxX = max(maxX, x - spacing)
+        }
+        return (origins, CGSize(width: maxX, height: y + rowHeight))
     }
 }
 
@@ -276,5 +454,122 @@ struct DotGridBackdrop: View {
         .mask(LinearGradient(colors: [.black, .clear], startPoint: .top, endPoint: .bottom))
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+}
+
+/// Стадии идиомы для переключателя. `new` показываем как «Learning», `suspended` не выбирает ни одну.
+private enum IdiomStage: CaseIterable, Identifiable {
+    case learning, reviewing, remembered, known
+
+    var id: Self { self }
+
+    var title: LocalizedStringKey {
+        switch self {
+        case .learning: "Learning"
+        case .reviewing: "Reviewing"
+        case .remembered: "Remembered"
+        case .known: "Known"
+        }
+    }
+
+    var status: LearningStatus {
+        switch self {
+        case .learning: .learning
+        case .reviewing: .reviewing
+        case .remembered: .remembered
+        case .known: .known
+        }
+    }
+
+    static func matching(_ status: LearningStatus) -> IdiomStage? {
+        switch status {
+        case .learning: .learning
+        case .reviewing: .reviewing
+        case .remembered: .remembered
+        case .known: .known
+        case .new, .suspended: nil
+        }
+    }
+}
+
+/// Переключатель стадий идиомы: четыре равных сегмента на серой дорожке, подложка скользит между ними.
+private struct IdiomStageSwitch: View {
+    let selection: LearningStatus
+    let onSelect: (LearningStatus) -> Void
+    @Namespace private var pill
+
+    var body: some View {
+        let current = IdiomStage.matching(selection)
+        HStack(spacing: 2) {
+            ForEach(IdiomStage.allCases) { stage in
+                let selected = current == stage
+                Button {
+                    guard !selected else { return }
+                    withAnimation(Motion.swap) { onSelect(stage.status) }
+                } label: {
+                    Text(stage.title)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(selected ? AppColor.ink : AppColor.ash)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                        .frame(maxWidth: .infinity, minHeight: 38)
+                        .background {
+                            if selected {
+                                Capsule().fill(AppColor.segmentActive).matchedGeometryEffect(id: "idiom-stage", in: pill)
+                            }
+                        }
+                }
+                .buttonStyle(PressScaleStyle())
+                .accessibilityAddTraits(selected ? [.isSelected] : [])
+            }
+        }
+        .padding(3)
+        .background(AppColor.track, in: .capsule)
+    }
+}
+
+/// Плитка выбора размещения слова: значок-плюс, заголовок и короткая подпись. Выбранная — с галочкой.
+private struct StudyTile: View {
+    let option: StudyPlacement
+    let isOn: Bool
+    let action: () -> Void
+
+    private var title: LocalizedStringKey {
+        switch option {
+        case .today: "Today"
+        case .practice: "Practice"
+        case .later: "Later"
+        }
+    }
+
+    private var subtitle: LocalizedStringKey {
+        switch option {
+        case .today: "+1 card"
+        case .practice: "exercises"
+        case .later: "tomorrow"
+        }
+    }
+
+    var body: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 3) {
+                Image(systemName: isOn ? "checkmark" : "plus")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(isOn ? AppColor.onFill : AppColor.ash)
+                    .frame(width: 30, height: 30)
+                    .background(isOn ? AppColor.fill : .clear, in: .circle)
+                    .overlay(Circle().stroke(isOn ? AppColor.fill : AppColor.glassLine))
+                    .padding(.bottom, 6)
+                Text(title).font(.system(size: 15, weight: .medium))
+                Text(subtitle).font(.system(size: 11, design: .monospaced)).foregroundStyle(isOn ? AppColor.ash : AppColor.smoke)
+            }
+            .frame(maxWidth: .infinity, minHeight: 92, alignment: .topLeading)
+            .padding(.horizontal, 12).padding(.top, 12).padding(.bottom, 10)
+            .background(isOn ? AppColor.accent.opacity(0.12) : .clear, in: .rect(cornerRadius: 20))
+            .overlay(RoundedRectangle(cornerRadius: 20).stroke(isOn ? AppColor.accent : AppColor.glassLine))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(PressScaleStyle())
+        .accessibilityAddTraits(isOn ? [.isSelected] : [])
     }
 }

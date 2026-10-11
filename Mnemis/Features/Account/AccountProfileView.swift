@@ -101,8 +101,8 @@ struct AccountProfileView: View {
                 get: { session.syncEnabled },
                 set: { viewModel.setSyncEnabled($0) }
             ))
-            .toggleStyle(GlowToggleStyle())
-            .padding(.horizontal, 16).frame(minHeight: 54)
+            .toggleStyle(MnemisToggleStyle())
+            .padding(.horizontal, 16).frame(minHeight: 48)
 
             SettingsRow(title: "Last synced") {
                 Text("never")
@@ -131,7 +131,7 @@ struct AccountProfileView: View {
                     .font(.system(size: 16))
                     .foregroundStyle(.red)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 16).frame(minHeight: 54)
+                    .padding(.horizontal, 16).frame(minHeight: 48)
             }
             .buttonStyle(PressScaleStyle())
         }

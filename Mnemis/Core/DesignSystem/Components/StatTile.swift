@@ -37,7 +37,7 @@ struct StatTile: View {
                 .foregroundStyle(AppColor.ash)
         }
         .foregroundStyle(AppColor.ink)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
         .padding(14)
         .glassCard(cornerRadius: 22)
         .accessibilityElement(children: .combine)
