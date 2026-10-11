@@ -25,7 +25,7 @@ struct WordEditingTests {
         details.update(meanings: [
             WordMeaning(partOfSpeech: "noun", translation: "книга"),
             WordMeaning(partOfSpeech: "verb", translation: "  "),
-        ], definition: "", ipa: "")
+        ], definition: "", ipa: "", level: nil)
 
         let stored = try #require(try container.words.word(id: word.id))
         #expect(stored.translation == "книга")

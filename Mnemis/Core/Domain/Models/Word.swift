@@ -23,6 +23,8 @@ struct Word: Identifiable, Equatable, Sendable {
     var licenseID: String?
     /// Личная заметка пользователя. Внешние данные её не трогают.
     var userNote: String?
+    /// Поля, которые пользователь правил сам (`ipa`, `definition`): они больше не помечаются как «auto».
+    var editedFields: Set<String>
     var createdAt: Date
     var updatedAt: Date
 
@@ -43,6 +45,7 @@ struct Word: Identifiable, Equatable, Sendable {
         sourceID: String? = nil,
         licenseID: String? = nil,
         userNote: String? = nil,
+        editedFields: Set<String> = [],
         createdAt: Date
     ) {
         self.id = id
@@ -61,6 +64,7 @@ struct Word: Identifiable, Equatable, Sendable {
         self.sourceID = sourceID
         self.licenseID = licenseID
         self.userNote = userNote
+        self.editedFields = editedFields
         self.createdAt = createdAt
         self.updatedAt = createdAt
     }
@@ -78,6 +82,8 @@ struct Word: Identifiable, Equatable, Sendable {
     /// Нормализованная форма для поиска и защиты от дублей.
     var normalizedLemma: String { TextNormalizer.normalize(lemma) }
 
+    static let editedIPA = "ipa"
+    static let editedDefinition = "definition"
     static let idiomPartOfSpeech = "idiom"
     /// Идиомы без частотного ранга попадают в очередь новых слов между частотными словами.
     static let idiomSortRank = 2500

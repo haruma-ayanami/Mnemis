@@ -18,6 +18,16 @@ enum WordEditorError: LocalizedError, Equatable {
     }
 }
 
+/// Поля, которые форма добавления может заполнить кроме слова и перевода.
+struct NewEntryDetails: Equatable, Sendable {
+    var partOfSpeech: String?
+    var level: String?
+    var ipa: String?
+    var definition: String?
+    /// Часть данных подставлена из Викисловаря: запись получает его лицензию (CC BY-SA).
+    var fromWiktionary = false
+}
+
 /// Добавление и редактирование слов. Работает без сети: данные можно дополнить позже.
 @MainActor
 struct WordEditor {
@@ -27,7 +37,7 @@ struct WordEditor {
     let clock: any Clock
 
     @discardableResult
-    func addWord(lemma: String, translation: String) throws -> Word {
+    func addWord(lemma: String, translation: String, example: String? = nil, details: NewEntryDetails = NewEntryDetails()) throws -> Word {
         let trimmedLemma = lemma.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedLemma.isEmpty else { throw WordEditorError.emptyLemma }
 
@@ -39,11 +49,17 @@ struct WordEditor {
         let word = Word(
             lemma: trimmedLemma,
             translation: translation.trimmingCharacters(in: .whitespacesAndNewlines),
+            partOfSpeech: details.partOfSpeech?.nilIfBlank,
+            definition: details.definition?.nilIfBlank,
+            ipa: details.ipa?.nilIfBlank,
+            level: details.level,
             origin: .user,
             sourceID: "user",
+            licenseID: details.fromWiktionary ? WiktionaryIdiomProvider.licenseID : nil,
             createdAt: clock.now
         )
         try words.upsert(word)
+        insertExample(example, wordID: word.id)
         try persistence.save()
         return word
     }
@@ -51,7 +67,7 @@ struct WordEditor {
     /// Идиома: слово с частью речи `idiom`. Значение пишет пользователь или берёт из Викисловаря,
     /// пример (необязательный) хранится как пользовательский.
     @discardableResult
-    func addIdiom(text: String, meaning: String, example: String? = nil) throws -> Word {
+    func addIdiom(text: String, meaning: String, example: String? = nil, details: NewEntryDetails = NewEntryDetails()) throws -> Word {
         let lemma = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !lemma.isEmpty else { throw WordEditorError.emptyLemma }
         let value = meaning.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -64,16 +80,22 @@ struct WordEditor {
             lemma: lemma,
             translation: value,
             partOfSpeech: Word.idiomPartOfSpeech,
+            definition: details.definition?.nilIfBlank,
+            level: details.level,
             origin: .user,
             sourceID: "user",
+            licenseID: details.fromWiktionary ? WiktionaryIdiomProvider.licenseID : nil,
             createdAt: clock.now
         )
         try words.upsert(word)
-        if let sentence = example?.trimmingCharacters(in: .whitespacesAndNewlines), !sentence.isEmpty {
-            words.insert(ExampleSentence(wordID: word.id, sentence: sentence, isUserCreated: true, createdAt: clock.now))
-        }
+        insertExample(example, wordID: word.id)
         try persistence.save()
         return word
+    }
+
+    private func insertExample(_ example: String?, wordID: UUID) {
+        guard let sentence = example?.nilIfBlank else { return }
+        words.insert(ExampleSentence(wordID: wordID, sentence: sentence, isUserCreated: true, createdAt: clock.now))
     }
 
     /// Удаляет слово или идиому пользователя вместе с примерами и прогрессом.
@@ -106,5 +128,13 @@ struct WordEditor {
             createdAt: clock.now
         ))
         try persistence.save()
+    }
+}
+
+private extension String {
+    /// Строка без пробелов по краям, а пустая становится `nil`.
+    var nilIfBlank: String? {
+        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
     }
 }

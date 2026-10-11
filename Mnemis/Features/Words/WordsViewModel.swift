@@ -151,19 +151,6 @@ final class WordsViewModel {
         }
     }
 
-    /// Добавляет слово и в фоне пытается дополнить его из источников. Без сети слово всё равно сохраняется.
-    @discardableResult
-    func addWord(lemma: String, translation: String) throws -> Word {
-        let word = try container.wordEditor.addWord(lemma: lemma, translation: translation)
-        load()
-        let enrichment = container.wordEnrichment
-        Task { [weak self] in
-            _ = try? await enrichment.enrich(wordID: word.id)
-            self?.load()
-        }
-        return word
-    }
-
     // MARK: - Внутреннее
 
     /// Счётчики чипов: по статусам прогресса строк текущего вида и числу строк без прогресса.

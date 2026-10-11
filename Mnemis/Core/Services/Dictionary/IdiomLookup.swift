@@ -85,7 +85,7 @@ enum WiktionaryIdiomParser {
         return IdiomEntry(text: entries[0].word, translations: translations, definition: definition, example: example)
     }
 
-    private static func stripStress(_ text: String) -> String {
+    static func stripStress(_ text: String) -> String {
         String(String.UnicodeScalarView(text.unicodeScalars.filter { !stress.contains($0) }))
             .trimmingCharacters(in: .whitespaces)
     }

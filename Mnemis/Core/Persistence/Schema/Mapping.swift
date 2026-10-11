@@ -22,6 +22,7 @@ extension WordEntity {
         sourceID = word.sourceID
         licenseID = word.licenseID
         userNote = word.userNote
+        editedFieldsRaw = word.editedFields.sorted().joined(separator: ",")
         createdAt = word.createdAt
         updatedAt = word.updatedAt
         isAPIOrigin = word.origin == .api
@@ -50,6 +51,7 @@ extension WordEntity {
             sourceID: sourceID,
             licenseID: licenseID,
             userNote: userNote,
+            editedFields: Set(editedFieldsRaw.split(separator: ",").map(String.init)),
             createdAt: createdAt
         )
         word.updatedAt = updatedAt

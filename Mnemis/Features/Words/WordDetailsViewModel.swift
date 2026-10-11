@@ -89,7 +89,7 @@ final class WordDetailsViewModel {
     }
 
     /// Сохраняет правку значений. Пустое значение удаляется; первое оставшееся становится основным переводом.
-    func update(meanings: [WordMeaning], definition: String, ipa: String) {
+    func update(meanings: [WordMeaning], definition: String, ipa: String, level: String?) {
         var updated = word
         let kept = meanings
             .map { WordMeaning(partOfSpeech: $0.partOfSpeech, translation: $0.translation.trimmingCharacters(in: .whitespacesAndNewlines)) }
@@ -98,8 +98,14 @@ final class WordDetailsViewModel {
         if let first = kept.first, !first.partOfSpeech.isEmpty { updated.partOfSpeech = first.partOfSpeech }
         // Одно значение хранится как обычный перевод, без списка.
         updated.meanings = kept.count > 1 ? kept : []
-        updated.definition = definition.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
-        updated.ipa = ipa.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
+        let newDefinition = definition.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
+        let newIPA = ipa.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty
+        // Поле, которое пользователь изменил, перестаёт быть «auto» и словарь его не перезапишет.
+        if newDefinition != word.definition { updated.editedFields.insert(Word.editedDefinition) }
+        if newIPA != word.ipa { updated.editedFields.insert(Word.editedIPA) }
+        updated.definition = newDefinition
+        updated.ipa = newIPA
+        updated.level = level
         perform { try container.wordEditor.update(updated) }
     }
 

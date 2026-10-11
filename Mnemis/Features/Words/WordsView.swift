@@ -5,10 +5,12 @@ import SwiftUI
 struct WordsView: View {
     @State private var viewModel: WordsViewModel
     @State private var section: WordsSection = .words
-    @State private var isAdding = false
-    @State private var addKind: EntryKind = .word
+    /// Открытая форма добавления: вид записи и слово из поиска передаются вместе с ней, а не читаются из состояния позже.
+    @State private var addRequest: AddRequest?
     /// Открытая карточка: переход без шеврона, как в дизайне строк.
     @State private var openedWord: Word?
+    /// Запись, созданная в форме добавления: карточка открывается, когда форма закрылась.
+    @State private var pendingWord: Word?
     /// Источник «зума» для карточек и формы добавления.
     @Namespace private var zoom
     @Namespace private var pill
@@ -44,7 +46,10 @@ struct WordsView: View {
                     listArea
                 }
                 .padding(.horizontal, 20)
+                // Контент прижат к верху: при любой нехватке места (клавиатура) он не должен центрироваться и уезжать вверх.
+                .frame(maxHeight: .infinity, alignment: .top)
             }
+            .dismissesKeyboard()
             .mnemisNavigationBarHidden()
             .navigationDestination(isPresented: Binding(
                 get: { openedWord != nil },
@@ -56,12 +61,10 @@ struct WordsView: View {
                         .hidesTabBar(container.router)
                 }
             }
-            .sheet(isPresented: $isAdding, onDismiss: reloadAll) {
-                // .id(addKind): начальный вид записи применяется заново при каждом открытии, а не сохраняется от прошлого раза.
-                AddEntryView(viewModel: viewModel, container: container, initialLemma: section == .words ? viewModel.query : "", initialKind: addKind) { _ in
-                    reloadAll()
+            .sheet(item: $addRequest, onDismiss: openPendingWord) { request in
+                AddEntryView(container: container, initialLemma: request.lemma, initialKind: request.kind) { word in
+                    pendingWord = word
                 }
-                .id(addKind)
                 .navigationTransition(.zoom(sourceID: Self.addSource, in: zoom))
             }
             .onAppear(perform: reloadAll)
@@ -70,6 +73,20 @@ struct WordsView: View {
 
     private func reloadAll() {
         viewModel.load()
+    }
+
+    /// После формы добавления сразу открывается карточка новой записи (или уже существующей, если она нашлась).
+    private func openPendingWord() {
+        guard let word = pendingWord else {
+            reloadAll()
+            return
+        }
+        pendingWord = nil
+        let target: WordsSection = word.isIdiom ? .idioms : .words
+        if section != target { section = target }
+        viewModel.kind = target.kind
+        reloadAll()
+        openedWord = word
     }
 
     private static let addSource = "add-entry"
@@ -91,8 +108,7 @@ struct WordsView: View {
                     .padding(.bottom, 6)
             }
             RoundGlassButton(systemImage: "plus", label: section == .words ? "Add word" : "Add idiom") {
-                addKind = section == .words ? .word : .idiom
-                isAdding = true
+                addRequest = AddRequest(kind: section == .words ? .word : .idiom, lemma: section == .words ? viewModel.query : "")
             }
             .matchedTransitionSource(id: Self.addSource, in: zoom)
         }
@@ -150,6 +166,8 @@ struct WordsView: View {
                 .textFieldStyle(.plain)
                 .mnemisNoAutocapitalization()
                 .foregroundStyle(AppColor.ink)
+                .submitLabel(.search)
+                .onSubmit { KeyboardDismissal.dismiss() }
             if !viewModel.query.isEmpty {
                 Button { viewModel.query = "" } label: {
                     Image(systemName: "xmark.circle.fill").foregroundStyle(AppColor.smoke)
@@ -224,24 +242,29 @@ struct WordsView: View {
     private var listArea: some View {
         // Старые строки уходят на 36 pt и гаснут за 0.2 s; при Reduce Motion только гаснут.
         let slide: CGFloat = reduceMotion ? 0 : 36
-        return ZStack(alignment: .top) {
-            if let outgoing {
-                VStack(spacing: 0) {
-                    ForEach(outgoing.rows, id: \.word.id) { row in
-                        WordRow(word: row.word, status: row.status)
-                            .padding(.horizontal, 4)
-                            .frame(maxWidth: .infinity)
-                            .overlay(alignment: .bottom) { Rectangle().fill(AppColor.hairline).frame(height: 1) }
+        // Прежние строки лежат поверх списка и не участвуют в раскладке: иначе на время перехода они
+        // увеличивают высоту области, и при открытой клавиатуре весь экран сдвигается вверх.
+        return wordsList
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .overlay(alignment: .top) {
+                if let outgoing {
+                    VStack(spacing: 0) {
+                        ForEach(outgoing.rows, id: \.word.id) { row in
+                            WordRow(word: row.word, status: row.status)
+                                .padding(.horizontal, 4)
+                                .frame(maxWidth: .infinity)
+                                .overlay(alignment: .bottom) { Rectangle().fill(AppColor.hairline).frame(height: 1) }
+                        }
                     }
+                    .padding(.top, 8)
+                    .frame(maxHeight: .infinity, alignment: .top)
+                    .clipped()
+                    .offset(x: -direction * slide * transition)
+                    .opacity(1 - transition)
+                    .allowsHitTesting(false)
+                    .animation(reduceMotion ? Motion.reduced : .easeOut(duration: 0.2), value: transition)
                 }
-                .padding(.top, 8)
-                .offset(x: -direction * slide * transition)
-                .opacity(1 - transition)
-                .allowsHitTesting(false)
-                .animation(reduceMotion ? Motion.reduced : .easeOut(duration: 0.2), value: transition)
             }
-            wordsList
-        }
     }
 
     /// Переход к другому разделу. Список перечитывается сразу, а анимация стартует на следующем кадре,
@@ -291,7 +314,7 @@ struct WordsView: View {
                         .foregroundStyle(AppColor.faint)
                     Text("Nothing found").font(.system(size: 17, weight: .medium)).foregroundStyle(AppColor.ink)
                     if !viewModel.query.isEmpty, section == .words {
-                        Button { addKind = .word; isAdding = true } label: { Text("Add “\(viewModel.query)”") }
+                        Button { addRequest = AddRequest(kind: .word, lemma: viewModel.query) } label: { Text("Add “\(viewModel.query)”") }
                             .buttonStyle(GlassButtonStyle(height: 44))
                             .fixedSize()
                     }
@@ -357,7 +380,7 @@ struct WordsView: View {
                 systemImage: "character.book.closed",
                 message: "Add your first word. It works offline.",
                 actionTitle: "Add Word",
-                action: { addKind = .word; isAdding = true }
+                action: { addRequest = AddRequest(kind: .word, lemma: "") }
             )
         case .idioms:
             EmptyStateView(
@@ -365,10 +388,17 @@ struct WordsView: View {
                 systemImage: "text.quote",
                 message: "Idioms from the built-in list appear as new words. You can also add your own.",
                 actionTitle: "Add idiom",
-                action: { addKind = .idiom; isAdding = true }
+                action: { addRequest = AddRequest(kind: .idiom, lemma: "") }
             )
         }
     }
+}
+
+/// Запрос на открытие формы добавления. Новый `id` при каждом нажатии — форма создаётся заново.
+private struct AddRequest: Identifiable {
+    let id = UUID()
+    let kind: EntryKind
+    let lemma: String
 }
 
 /// Два раздела словаря (ABOUT.md, раздел 9.1).

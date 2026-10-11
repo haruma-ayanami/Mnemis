@@ -10,6 +10,7 @@ final class AppContainer {
     let engine: any SpacedRepetitionEngine
     let dictionary: DictionaryService
     let idioms: any IdiomProvider
+    let wordLookup: any WordLookupProvider
     let router: AppRouter
     let notifications: NotificationService
     let account: AccountService
@@ -27,9 +28,11 @@ final class AppContainer {
         engine: any SpacedRepetitionEngine = SM2SpacedRepetitionEngine(),
         dictionary: DictionaryService? = nil,
         idioms: any IdiomProvider = WiktionaryIdiomProvider(),
+        wordLookup: any WordLookupProvider = WiktionaryWordProvider(),
         accountStore: AccountStore = KeychainAccountStore()
     ) {
         self.idioms = idioms
+        self.wordLookup = wordLookup
         let context = persistence.context
         let words = WordRepository(context: context)
 
@@ -74,11 +77,18 @@ final class AppContainer {
         return container
     }
 
-    static func inMemory(clock: any Clock = SystemClock(), dictionary: DictionaryService? = nil) throws -> AppContainer {
+    static func inMemory(
+        clock: any Clock = SystemClock(),
+        dictionary: DictionaryService? = nil,
+        idioms: any IdiomProvider = WiktionaryIdiomProvider(),
+        wordLookup: any WordLookupProvider = WiktionaryWordProvider()
+    ) throws -> AppContainer {
         AppContainer(
             persistence: try PersistenceController.make(inMemory: true),
             clock: clock,
             dictionary: dictionary,
+            idioms: idioms,
+            wordLookup: wordLookup,
             accountStore: InMemoryAccountStore()
         )
     }

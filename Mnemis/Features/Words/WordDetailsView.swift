@@ -6,6 +6,7 @@ struct WordDetailsView: View {
     @State private var newExample = ""
     @State private var note: String
     @State private var isEditing = false
+    @FocusState private var noteFocused: Bool
     @Environment(\.dismiss) private var dismiss
 
     init(word: Word, container: AppContainer, onChange: @escaping () -> Void) {
@@ -50,7 +51,9 @@ struct WordDetailsView: View {
                 .padding(.bottom, 28)
             }
             .scrollIndicators(.hidden)
+            .scrollsToDismissKeyboard()
         }
+        .dismissesKeyboard()
         .mnemisNavigationBarHidden()
         .sheet(isPresented: $isEditing) { EditWordView(viewModel: viewModel, onDeleted: { dismiss() }) }
     }
@@ -196,7 +199,9 @@ struct WordDetailsView: View {
     }
 
     private var idiomPills: [String] {
-        var result = ["idiom", viewModel.status.rawValue]
+        var result = ["idiom"]
+        if let level = viewModel.word.level { result.append(level) }
+        result.append(viewModel.status.rawValue)
         if viewModel.word.origin == .user { result.append("yours") }
         return result
     }
@@ -334,7 +339,12 @@ struct WordDetailsView: View {
                 .foregroundStyle(AppColor.ink)
                 .padding(14)
                 .glassCard(cornerRadius: 20)
+                .focused($noteFocused)
                 .onSubmit { viewModel.saveNote(note) }
+                // Клавиатуру закрывают свайпом или касанием: заметка сохраняется, когда поле теряет фокус.
+                .onChange(of: noteFocused) { _, focused in
+                    if !focused, note != (viewModel.word.userNote ?? "") { viewModel.saveNote(note) }
+                }
             if note != (viewModel.word.userNote ?? "") {
                 Button("Save note") { viewModel.saveNote(note) }
                     .buttonStyle(PressScaleStyle()).font(.system(size: 14, weight: .medium)).foregroundStyle(AppColor.accent)

@@ -4,6 +4,9 @@
     "" : {
 
     },
+    "–" : {
+
+    },
     "—" : {
 
     },
@@ -28,10 +31,16 @@
     "[ add to study ]" : {
 
     },
+    "[ already in your list ]" : {
+
+    },
     "[ daily pace ]" : {
 
     },
     "[ definition ]" : {
+
+    },
+    "[ details ]" : {
 
     },
     "[ example · optional ]" : {
@@ -55,6 +64,12 @@
     "[ ipa ]" : {
 
     },
+    "[ level ]" : {
+
+    },
+    "[ looking up in wiktionary… ]" : {
+
+    },
     "[ meaning · русский ]" : {
 
     },
@@ -67,10 +82,19 @@
     "[ next review ]" : {
 
     },
+    "[ no connection ]" : {
+
+    },
+    "[ not found ]" : {
+
+    },
     "[ note ]" : {
 
     },
     "[ notifications ]" : {
+
+    },
+    "[ part of speech ]" : {
 
     },
     "[ practice ]" : {
@@ -94,9 +118,6 @@
     "[ translation · %@ ]" : {
 
     },
-    "[ translation · optional ]" : {
-
-    },
     "[ translation ]" : {
 
     },
@@ -110,6 +131,9 @@
 
     },
     "[ word · english ]" : {
+
+    },
+    "[ word ]" : {
 
     },
     "[ word of the day ]" : {
@@ -143,6 +167,9 @@
           }
         }
       }
+    },
+    "%@ / 03" : {
+
     },
     "%@ results" : {
 
@@ -197,6 +224,9 @@
     "+" : {
 
     },
+    "+ Add part of speech" : {
+
+    },
     "+%lld" : {
 
     },
@@ -242,6 +272,9 @@
     "✓" : {
 
     },
+    "✓ found" : {
+
+    },
     "1 question" : {
 
     },
@@ -255,9 +288,6 @@
 
     },
     "A few new words a day. Mnemis decides what to review and when." : {
-
-    },
-    "A joke helped break the ice." : {
 
     },
     "a new word to guess" : {
@@ -326,6 +356,9 @@
     "Allow notifications" : {
 
     },
+    "an example sentence" : {
+
+    },
     "Appearance" : {
 
     },
@@ -333,6 +366,12 @@
 
     },
     "At most per day" : {
+
+    },
+    "auto" : {
+
+    },
+    "auto · wiktionary" : {
 
     },
     "Back" : {
@@ -382,6 +421,9 @@
 
     },
     "change any time in Settings → Notifications" : {
+
+    },
+    "check it, the card opens next" : {
 
     },
     "Clear search" : {
@@ -480,13 +522,16 @@
     "Fewer words" : {
 
     },
+    "Fields marked auto come from the built-in list and Wiktionary. Your edits are never overwritten." : {
+
+    },
+    "Fill in the details yourself. The entry is saved offline." : {
+
+    },
     "First everyday words" : {
 
     },
     "first review tomorrow · tap to undo" : {
-
-    },
-    "Found in Wiktionary · CC BY-SA" : {
 
     },
     "Gentle reminders, only when they help." : {
@@ -635,9 +680,6 @@
     "local-first · sign-in optional" : {
 
     },
-    "Looking up in Wiktionary…" : {
-
-    },
     "meaning" : {
 
     },
@@ -669,13 +711,7 @@
     "never" : {
 
     },
-    "New idiom" : {
-
-    },
     "new today" : {
-
-    },
-    "New word" : {
 
     },
     "new words" : {
@@ -699,13 +735,7 @@
     "Next review after this" : {
 
     },
-    "No connection. Write the meaning yourself, the idiom is saved offline." : {
-
-    },
     "No idioms yet" : {
-
-    },
-    "No internet? The word is saved anyway. Details can be added later." : {
 
     },
     "no password stored · you can sign in later in Settings" : {
@@ -717,7 +747,7 @@
     "No words yet" : {
 
     },
-    "Not in the open dictionary. Write the meaning yourself." : {
+    "Not in Wiktionary. You can fill in the details yourself." : {
 
     },
     "Not now" : {
@@ -769,6 +799,9 @@
 
     },
     "only if you skipped today" : {
+
+    },
+    "Open" : {
 
     },
     "Open in Dictionary" : {
@@ -853,6 +886,9 @@
 
     },
     "RU" : {
+
+    },
+    "same order as the card" : {
 
     },
     "Same words on every device" : {
@@ -972,6 +1008,9 @@
     "Subtle meaning, academic texts" : {
 
     },
+    "suggested" : {
+
+    },
     "Suspend" : {
 
     },
@@ -991,6 +1030,9 @@
 
     },
     "tap to start →" : {
+
+    },
+    "This entry is already in your vocabulary. Open it instead." : {
 
     },
     "This week" : {
@@ -1017,13 +1059,16 @@
     "translation" : {
 
     },
-    "Type an idiom: meaning and example come from Wiktionary." : {
+    "type it, we look it up" : {
 
     },
     "Types" : {
 
     },
     "Upper-intermediate" : {
+
+    },
+    "Use" : {
 
     },
     "via %@" : {

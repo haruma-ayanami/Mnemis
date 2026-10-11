@@ -28,6 +28,8 @@ final class WordEntity {
     var sourceID: String?
     var licenseID: String?
     var userNote: String?
+    /// Поля, правленные пользователем, через запятую.
+    var editedFieldsRaw: String = ""
     var createdAt: Date = Date.now
     var updatedAt: Date = Date.now
 
