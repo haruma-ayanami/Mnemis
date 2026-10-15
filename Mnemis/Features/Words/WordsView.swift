@@ -39,7 +39,7 @@ struct WordsView: View {
                     header
                     sectionPicker.padding(.top, 16)
                     searchField.padding(.top, 14)
-                    if !viewModel.query.isEmpty {
+                    if !viewModel.query.isEmpty, !viewModel.results.isEmpty {
                         searchHint.padding(.top, 8)
                     }
                     chips.padding(.top, 12)
@@ -91,6 +91,13 @@ struct WordsView: View {
 
     private static let addSource = "add-entry"
 
+    /// Кнопка «Add “…”» при пустой выдаче. Для идиом только если в запросе несколько слов: одно слово — не идиома.
+    private var offersAdd: Bool {
+        let typed = viewModel.query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !typed.isEmpty else { return false }
+        return section == .words || typed.contains(where: \.isWhitespace)
+    }
+
     /// Форма добавления для открытого раздела: текст из поиска сразу попадает в поле слова или идиомы.
     private func openAddForm() {
         let typed = viewModel.query.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -108,7 +115,7 @@ struct WordsView: View {
             }
             Spacer()
             if !viewModel.query.isEmpty {
-                Text("\(viewModel.results.count.formatted()) results")
+                Text("^[\(viewModel.results.count) result](inflect: true)")
                     .font(.system(size: 12, design: .monospaced))
                     .foregroundStyle(AppColor.smoke)
                     .padding(.bottom, 6)
@@ -169,6 +176,7 @@ struct WordsView: View {
             TextField(section == .words ? "Search word, translation, note" : "Search idioms and meanings", text: $viewModel.query)
                 .textFieldStyle(.plain)
                 .mnemisNoAutocapitalization()
+                .mnemisNoAutocorrection()
                 .foregroundStyle(AppColor.ink)
                 .submitLabel(.search)
                 .onSubmit { KeyboardDismissal.dismiss() }
@@ -313,19 +321,24 @@ struct WordsView: View {
                 emptyState
             } else if viewModel.results.isEmpty {
                 VStack(spacing: 12) {
+                    // Рамка всегда из трёх строк целиком: при открытой клавиатуре сжимается отступ над ней, а не она.
                     Text("┌─────────┐\n│  · · ·  │\n└─────────┘")
                         .font(.system(size: 15, design: .monospaced))
                         .foregroundStyle(AppColor.faint)
+                        .fixedSize(horizontal: false, vertical: true)
                     Text("Nothing found").font(.system(size: 17, weight: .medium)).foregroundStyle(AppColor.ink)
-                    if !viewModel.query.isEmpty {
-                        Button(action: openAddForm) { Text("Add “\(viewModel.query)”") }
-                            .buttonStyle(GlassButtonStyle(height: 44))
-                            .fixedSize()
+                    if offersAdd {
+                        Button(action: openAddForm) {
+                            Text("Add “\(viewModel.query)”").lineLimit(1).padding(.horizontal, 24)
+                        }
+                        .buttonStyle(GlassButtonStyle(height: 44))
+                        .fixedSize()
+                        .padding(.top, 8)
                     }
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.top, 80)
-                Spacer()
+                .padding(.top, 48)
+                Spacer(minLength: 0)
             } else {
                 ScrollViewReader { proxy in
                     List {

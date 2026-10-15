@@ -20,6 +20,11 @@ extension View {
         textInputAutocapitalization(.never)
     }
 
+    /// Выключает автокоррекцию и подсказки замены: в поиске по словарю и в поле слова система не должна «исправлять» ввод.
+    func mnemisNoAutocorrection(disabled: Bool = true) -> some View {
+        autocorrectionDisabled(disabled)
+    }
+
     /// Скрывает системную панель навигации: заголовки рисуем сами.
     /// Со скрытой панелью система отключает возврат свайпом от левого края, поэтому жест включается заново.
     func mnemisNavigationBarHidden() -> some View {

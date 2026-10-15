@@ -171,9 +171,6 @@
     "%@ / 03" : {
 
     },
-    "%@ results" : {
-
-    },
     "%lld" : {
 
     },
@@ -216,6 +213,9 @@
 
     },
     "^[%lld day](inflect: true)" : {
+
+    },
+    "^[%lld result](inflect: true)" : {
 
     },
     "→" : {

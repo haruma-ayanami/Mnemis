@@ -34,6 +34,7 @@ struct LabeledField: View {
                 ))
                 .foregroundStyle(AppColor.ink)
                 .mnemisNoAutocapitalization()
+                .mnemisNoAutocorrection(disabled: emphasized)
                 .focused($isFocused)
         }
         .padding(.horizontal, 16).padding(.vertical, verticalPadding)

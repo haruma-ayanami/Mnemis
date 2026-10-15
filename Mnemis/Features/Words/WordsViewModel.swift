@@ -49,6 +49,8 @@ final class WordsViewModel {
     var totalCount: Int { kind.isIdiom ? idiomCount : wordCount }
 
     private var counts: [LearningStatus?: Int] = [:]
+    /// Пока введён запрос: сколько найденного приходится на каждый статус (чипы фильтров считают по запросу).
+    private var searchCounts: [LearningStatus?: Int]?
     private var hasMorePages = false
     /// Строки выбранного статуса. Их немного, поэтому держим список целиком и режем страницами.
     private var statusWords: [Word] = []
@@ -60,9 +62,9 @@ final class WordsViewModel {
         self.container = container
     }
 
-    /// Количество строк для чипа фильтра текущего вида.
+    /// Количество строк для чипа фильтра текущего вида; при запросе считается по найденному.
     func count(for filter: LearningStatus?) -> Int {
-        counts[filter] ?? 0
+        (searchCounts ?? counts)[filter] ?? 0
     }
 
     /// Число строк вида: для сегментов «Words | Idioms» без переключения.
@@ -180,11 +182,15 @@ final class WordsViewModel {
             results = []
             hasMorePages = false
             statusWords = []
+            searchCounts = nil
 
             if !query.isEmpty {
                 let found = try container.words.search(query, limit: Self.searchLimit, kind: kind)
                 // Статусы нужны до фильтра: по ним отбираем результаты.
                 try refreshStatuses(for: found)
+                var tally: [LearningStatus?: Int] = [nil: found.count]
+                for word in found { tally[status(of: word), default: 0] += 1 }
+                searchCounts = tally
                 results = filter.map { selected in found.filter { status(of: $0) == selected } } ?? found
             } else if let filter, filter != .new {
                 statusWords = try wordsWithStatus(filter)
