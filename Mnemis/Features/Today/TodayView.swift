@@ -17,6 +17,9 @@ struct TodayView: View {
             backdrop
             content
         }
+        // Прокрутка кончается над панелью вкладок: кнопка сессии не прячется под ней, а длинная карточка
+        // дня прокручивается до конца и остаётся там.
+        .reservesTabBarSpace()
         .onAppear { viewModel.load() }
         .onChange(of: container.router.refreshRequest) { _, _ in viewModel.load() }
     }
@@ -47,7 +50,7 @@ struct TodayView: View {
                 // Блоки появляются по очереди сверху вниз: взгляд идёт от слова дня к кнопке сессии.
                 VStack(alignment: .leading, spacing: 12) {
                     header.screenEntrance()
-                    Spacer().frame(height: 40)
+                    Spacer().frame(height: 24)
                     wordCard.screenEntrance(delay: 0.05)
                     tiles.screenEntrance(delay: 0.1)
                     WeekStrip(days: viewModel.week).screenEntrance(delay: 0.14)
@@ -55,7 +58,8 @@ struct TodayView: View {
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 8)
-                .padding(.bottom, 24)
+                // Зазор между кнопкой и панелью вкладок 66 pt, как на холсте (Today).
+                .padding(.bottom, 46)
             }
             .foldsTabBarOnScroll(container.router)
             .scrollIndicators(.hidden)

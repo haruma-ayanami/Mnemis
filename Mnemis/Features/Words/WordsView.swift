@@ -91,6 +91,12 @@ struct WordsView: View {
 
     private static let addSource = "add-entry"
 
+    /// Форма добавления для открытого раздела: текст из поиска сразу попадает в поле слова или идиомы.
+    private func openAddForm() {
+        let typed = viewModel.query.trimmingCharacters(in: .whitespacesAndNewlines)
+        addRequest = AddRequest(kind: section == .words ? .word : .idiom, lemma: typed)
+    }
+
     private var header: some View {
         HStack(alignment: .bottom) {
             VStack(alignment: .leading, spacing: 2) {
@@ -107,9 +113,7 @@ struct WordsView: View {
                     .foregroundStyle(AppColor.smoke)
                     .padding(.bottom, 6)
             }
-            RoundGlassButton(systemImage: "plus", label: section == .words ? "Add word" : "Add idiom") {
-                addRequest = AddRequest(kind: section == .words ? .word : .idiom, lemma: section == .words ? viewModel.query : "")
-            }
+            RoundGlassButton(systemImage: "plus", label: section == .words ? "Add word" : "Add idiom", action: openAddForm)
             .matchedTransitionSource(id: Self.addSource, in: zoom)
         }
         .padding(.top, 8)
@@ -313,8 +317,8 @@ struct WordsView: View {
                         .font(.system(size: 15, design: .monospaced))
                         .foregroundStyle(AppColor.faint)
                     Text("Nothing found").font(.system(size: 17, weight: .medium)).foregroundStyle(AppColor.ink)
-                    if !viewModel.query.isEmpty, section == .words {
-                        Button { addRequest = AddRequest(kind: .word, lemma: viewModel.query) } label: { Text("Add “\(viewModel.query)”") }
+                    if !viewModel.query.isEmpty {
+                        Button(action: openAddForm) { Text("Add “\(viewModel.query)”") }
                             .buttonStyle(GlassButtonStyle(height: 44))
                             .fixedSize()
                     }

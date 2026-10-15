@@ -58,13 +58,16 @@ struct FlashcardView: View {
     private var header: some View {
         HStack(spacing: 14) {
             RoundGlassButton(systemImage: "xmark", label: "End session", action: onClose)
-            VStack(alignment: .leading, spacing: 5) {
+            // Блок занимает оставшуюся ширину и не больше: кружки переносятся на новые строки, карточка и кнопки не растягиваются.
+            VStack(alignment: .leading, spacing: 8) {
                 DotProgress(done: viewModel.reviewedCount, total: viewModel.totalCount)
                 Text("\(String(format: "%02d", viewModel.reviewedCount + 1)) / \(String(format: "%02d", viewModel.totalCount)) · \(viewModel.newCount) new · \(viewModel.reviewCount) reviews")
                     .font(.system(size: 11, design: .monospaced))
                     .foregroundStyle(AppColor.smoke)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
-            Spacer()
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 

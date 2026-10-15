@@ -10,6 +10,15 @@ extension View {
     func foldsTabBarOnScroll(_ router: AppRouter) -> some View {
         modifier(FoldsTabBarOnScroll(router: router))
     }
+
+    /// Запас под панель вкладок: она занимает 66 pt и стоит на 22 pt от края, поэтому содержимое вкладки
+    /// поднимается над ней. Без этого запаса прокрутка кончается под панелью, а короткое содержимое
+    /// «не прокручивается»: список отпружинивает обратно наверх.
+    func reservesTabBarSpace() -> some View {
+        safeAreaInset(edge: .bottom, spacing: 0) {
+            Color.clear.frame(height: 74)
+        }
+    }
 }
 
 private struct HidesTabBarWhileShown: ViewModifier {

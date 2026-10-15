@@ -29,10 +29,8 @@ struct LearnView: View {
                 content
             }
         }
-        // Панель вкладок накрывает нижнюю часть экрана; вкладка Learn получает тот же запас, что и остальные.
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            Color.clear.frame(height: 74)
-        }
+        // Панель вкладок накрывает нижнюю часть экрана: содержимое поднимается над ней.
+        .reservesTabBarSpace()
         .animation(reduceMotion ? Motion.reduced : Motion.enter, value: viewModel.current == nil)
         .animation(Motion.swap, value: mode)
         .onAppear { viewModel.startIfNeeded() }
@@ -275,12 +273,15 @@ private struct LearnDeckView: View {
                     .foregroundStyle(AppColor.ash)
             }
             Spacer(minLength: 8)
-            HStack(alignment: .center) {
+            // Точки занимают место слева от подписи и переносятся на новые строки; подпись не сжимается и не переносится.
+            HStack(alignment: .bottom, spacing: 12) {
                 DeckComposition(new: remainingNew, reviews: remainingReviews)
-                Spacer()
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 Text("tap to start →")
                     .font(.system(size: 12, design: .monospaced))
                     .foregroundStyle(AppColor.smoke)
+                    .lineLimit(1)
+                    .fixedSize()
             }
         }
         .padding(.horizontal, 24).padding(.vertical, 24)
@@ -334,7 +335,8 @@ private struct DeckComposition: View {
         let total = new + reviews
         let shown = min(total, Self.limit)
         let shownNew = total == 0 ? 0 : Int((Double(new) / Double(total) * Double(shown)).rounded())
-        HStack(spacing: 6) {
+        // Ряд переносится на 2–3 строки внутри отведённой ширины и не растягивает экран (холст: Learn · Today's deck · 27 cards).
+        WrapLayout(spacing: 6) {
             ForEach(0..<shown, id: \.self) { index in
                 Circle()
                     .fill(index < shownNew ? AppColor.fill : .clear)

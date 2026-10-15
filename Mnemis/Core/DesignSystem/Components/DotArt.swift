@@ -148,22 +148,38 @@ struct MeshFloor: View {
     }
 }
 
-/// Точки сессии: `●●●●●●◉○○○○`. Заполненные — зелёные, текущая — светлая.
+/// Точки сессии: `●●●●●●◉○○○○`. Заполненные — зелёные, текущая — кольцо с точкой, остальные — пустые кольца.
+/// Ряд переносится на новые строки внутри предложенной ширины: длинная сессия не растягивает экран (холст: Learn · Card · 29 cards).
 struct DotProgress: View {
     let done: Int
     let total: Int
 
+    private static let size: CGFloat = 10
+
     var body: some View {
-        HStack(spacing: 5) {
+        WrapLayout(spacing: 6) {
             ForEach(0..<total, id: \.self) { index in
-                Circle()
-                    .fill(index < done ? AppColor.fill : .clear)
-                    .overlay(Circle().stroke(index == done ? AppColor.ink : AppColor.faint, lineWidth: index < done ? 0 : 1.2))
-                    .frame(width: 7, height: 7)
+                dot(at: index)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement()
         .accessibilityLabel(Text("Card \(min(done + 1, total)) of \(total)"))
+    }
+
+    @ViewBuilder
+    private func dot(at index: Int) -> some View {
+        Group {
+            if index < done {
+                Circle().fill(AppColor.fill).shadow(color: AppColor.glow.opacity(0.6), radius: 3)
+            } else if index == done {
+                Circle().stroke(AppColor.ink, lineWidth: 1.5)
+                    .overlay(Circle().fill(AppColor.ink).frame(width: 4, height: 4))
+            } else {
+                Circle().stroke(AppColor.faint, lineWidth: 1.2)
+            }
+        }
+        .frame(width: Self.size, height: Self.size)
     }
 }
 

@@ -399,7 +399,7 @@ struct FlowPills: View {
 
     var body: some View {
         // Пилюли переносятся на следующую строку, а не обрезаются (холст: Word-Details).
-        PillFlowLayout(spacing: 6) {
+        WrapLayout(spacing: 6) {
             ForEach(items, id: \.self) { item in
                 Text(item)
                     .font(.system(size: 12, design: .monospaced))
@@ -414,7 +414,8 @@ struct FlowPills: View {
 }
 
 /// Раскладка «слева направо с переносом»: следующий элемент встаёт в новую строку, если не помещается.
-private struct PillFlowLayout: Layout {
+/// Ширина не превышает предложенную родителем, поэтому длинный ряд не растягивает экран.
+struct WrapLayout: Layout {
     var spacing: CGFloat
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
